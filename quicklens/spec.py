@@ -63,7 +63,7 @@ def get_camb_scalcl(fname=None, prefix=None, lmax=None):
     
     return camb_clfile( tf[0], lmax=lmax )
 
-def get_camb_lensedcl(prefix=None, lmax=None, fname=None):
+def get_camb_lensedcl(fname=None, prefix=None, lmax=None):
     """ loads and returns a "lensed Cls" file produced by CAMB (camb.info).
 
          * (optional) fname  = file name to load.
@@ -102,7 +102,10 @@ class camb_clfile(object):
 
         if lmax == None:
             lmax = np.shape(tarray)[0]-lmin+1
-            assert(tarray[-1, 0] == lmax)
+            if lmax > 10000:
+                lmax = 10000
+            else:
+                assert(tarray[-1, 0] == lmax)
         assert( (np.shape(tarray)[0]+1) >= lmax )
 
         ncol = np.shape(tarray)[1]
