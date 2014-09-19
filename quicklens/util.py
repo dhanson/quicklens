@@ -4,7 +4,6 @@
 
 import sys, time, copy, os, io, sqlite3
 import numpy as np
-import mpi
 
 def chunks(l,n):
 	""" divide list l into smaller chunks of size <= n. """
@@ -212,6 +211,7 @@ sqlite3.register_converter("array", convert_array)
 class npdb():
     """ a simple wrapper class to store numpy arrays in an sqlite3 database, indexed by an id string. """
     def __init__(self, fname):
+        import mpi
         if (not os.path.exists(fname) and mpi.rank == 0):
             con = sqlite3.connect(fname, detect_types=sqlite3.PARSE_DECLTYPES)
             cur = con.cursor()

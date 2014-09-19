@@ -17,7 +17,6 @@ import numpy as np
 
 import spec
 import util
-import math
 
 class pix(object):
     def __init__(self, nx, dx, ny=None, dy=None):
