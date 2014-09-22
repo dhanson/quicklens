@@ -1,15 +1,17 @@
 # quicklens/qest/lens.py
 # --
-# this module contains quadratic estimators 'plm' for the CMB lensing
-# potential, using weight functions for combinations of temperature (T) and
+# this module contains quadratic estimators for the phi and psi potentials
+# which give the CMB lensing deflection
+#    d(n) = \grad \phi(n) + \curl \psi(n).
+# they use weight functions W for combinations of temperature (T) and
 # polarization (E,B) from Hu et. al. http://arxiv.org/abs/astro-ph/0111606
 
 import qest
 
-class qest_plm_TT(qest.qest):
-    """ temperature-temperature (TT) lensing potential estimator. """
+class phi_TT(qest.qest):
+    """ temperature-temperature (TT) lensing potential gradient-mode estimator. """
     def __init__(self, cltt):
-        """ initialize the TT lensing potential estimator.
+        """ initialize the TT lensing potential gradient-mode estimator.
              * cltt = lensed TT power spectrum.
         """
         self.cltt = cltt
@@ -41,9 +43,9 @@ class qest_plm_TT(qest.qest):
     def wc_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.cltt)), self.cltt, right=0 ) * l
 
-class qest_plm_TT_s0(qest.qest):
-    """ version of the temperature-temperature (TT) lensing potential estimator with spin-0 weights.
-    equivalent to qest_plm_TT, but with different implementation of the weights.
+class phi_TT_s0(qest.qest):
+    """ version of the temperature-temperature (TT) lensing potential gradient-mode estimator with spin-0 weights.
+    equivalent to phi_TT, but with different implementation of the weights.
     this class is meant to represent more closely the usual temperatre x (gradient temperature)
     description of the TT lensing estimator. """
     def __init__(self, cltt):
@@ -83,10 +85,10 @@ class qest_plm_TT_s0(qest.qest):
     def wc_ly(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.cltt)), self.cltt, right=0 ) * ly
 
-class qest_plm_TE(qest.qest):
-    """ TE lensing potential estimator. """
+class phi_TE(qest.qest):
+    """ TE lensing potential gradient-mode estimator. """
     def __init__(self, clte):
-        """ initialize the TE lensing potential estimator.
+        """ initialize the TE lensing potential gradient-mode estimator.
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
@@ -130,10 +132,10 @@ class qest_plm_TE(qest.qest):
     def wc_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.clte)), self.clte, right=0 ) * l
 
-class qest_plm_TB(qest.qest):
-    """ TB lensing potential estimator. """
+class phi_TB(qest.qest):
+    """ TB lensing potential gradient-mode estimator. """
     def __init__(self, clte):
-        """ initialize the TB lensing potential estimator.
+        """ initialize the TB lensing potential gradient-mode estimator.
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
@@ -168,10 +170,10 @@ class qest_plm_TB(qest.qest):
     def wc_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.clte)), self.clte, right=0 ) * l
 
-class qest_plm_EE(qest.qest):
-    """ EE lensing potential estimator. """
+class phi_EE(qest.qest):
+    """ EE lensing potential gradient-mode estimator. """
     def __init__(self, clee):
-        """ initialize the EE lensing potential estimator.
+        """ initialize the EE lensing potential gradient-mode estimator.
              * clee = lensed EE power spectrum.
         """
         self.clee = clee
@@ -219,10 +221,10 @@ class qest_plm_EE(qest.qest):
     def wc_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
 
-class qest_plm_EB(qest.qest):
-    """ EB lensing potential estimator. """
+class phi_EB(qest.qest):
+    """ EB lensing potential gradient-mode estimator. """
     def __init__(self, clte):
-        """ initialize the EB lensing potential estimator.
+        """ initialize the EB lensing potential gradient-mode estimator.
              * clte = lensed TE power spectrum.
         """
         self.clee = clee
@@ -259,10 +261,10 @@ class qest_plm_EB(qest.qest):
     def wc_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
 
-class qest_plm_ET(qest_plm_TE):
-    """ ET lensing potential estimator. equivalent to qest_plm_TE, but with E in first index position. """
+class phi_ET(phi_TE):
+    """ ET lensing potential gradient-mode estimator. equivalent to phi_TE, but with E in first index position. """
     def __init__(self, clte):
-        """ initialize the ET lensing potential estimator.
+        """ initialize the ET lensing potential gradient-mode estimator.
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
@@ -297,10 +299,10 @@ class qest_plm_ET(qest_plm_TE):
         self.wl[5][0] = self.wc_ml; self.sl[5][0] = -1
         self.wl[5][2] = self.wo_ml; self.sl[5][2] = -1
     
-class qest_plm_BT(qest_plm_TB):
-    """ BT lensing potential estimator. equivalent to qest_plm_TB, but with B in the first index position. """
+class phi_BT(phi_TB):
+    """ BT lensing potential gradient-mode estimator. equivalent to phi_TB, but with B in the first index position. """
     def __init__(self, clte):
-        """ initialize the BT lensing potential estimator.
+        """ initialize the BT lensing potential gradient-mode estimator.
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
@@ -326,10 +328,10 @@ class qest_plm_BT(qest_plm_TB):
         self.wl[3][0] = self.wo_di; self.sl[3][0] = -2
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
     
-class qest_plm_BE(qest_plm_EB):
-    """ BE lensing potential estimator. equivalent to qest_plm_EB, but with B in first index position. """
+class phi_BE(phi_EB):
+    """ BE lensing potential gradient-mode estimator. equivalent to phi_EB, but with B in first index position. """
     def __init__(self, clee):
-        """ initialize the BE lensing potential estimator.
+        """ initialize the BE lensing potential gradient-mode estimator.
              * clee = lensed EE power spectrum.
         """
         self.clee = clee
@@ -355,10 +357,10 @@ class qest_plm_BE(qest_plm_EB):
         self.wl[3][0] = self.wo_di; self.sl[3][0] = -2
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
 
-class qest_xlm_TT(qest.qest):
-    """ temperature-temperature (TT) lensing curl-mode estimator. """
+class psi_TT(qest.qest):
+    """ temperature-temperature (TT) lensing potential curl-mode estimator. """
     def __init__(self, cltt):
-        """ initialize the TT lensing curl-mode estimator.
+        """ initialize the TT lensing potential curl-mode estimator.
              * cltt = lensed TT power spectrum.
         """
         self.cltt = cltt
