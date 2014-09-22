@@ -102,3 +102,33 @@ def proj_dat( d, vs, w=None ):
     for i in xrange(0,n):
         r -= vs[i] * c[i]
     return r
+
+def pad_ft(a, npad=2):
+    """ pad a 2D Fourier transform (produced by np.fft2) with zeros, useful when performing convolutions to ensure that the result is not aliased.
+           * a    = 2D complex Fourier transform.
+           * npad = fractional size to pad. npad=2 will double the size of the Fourier transform in each dimension.
+    """
+    if npad==1: return a
+    nx,ny = a.shape
+    p = np.zeros([nx*npad,ny*npad], dtype=a.dtype)
+    p[0:nx,0:ny] = np.fft.fftshift(a)
+    p = np.roll(np.roll(p,-nx/2,axis=0),-ny/2,axis=1)
+    return p
+
+def unpad_ft(a, npad=2):
+    """ un-pad an array in Fourier-space, removing the additional zeros added by 'pad_ft' """
+    if npad==1: return a
+    nx_pad,ny_pad = a.shape
+    nx = int(nx_pad/npad); ny=int(ny_pad/npad)
+    return np.roll(np.roll(
+            (np.roll(np.roll(a,nx/2,axis=0),ny/2,axis=1)[0:nx,0:ny]),
+            nx/2,axis=0),ny/2,axis=1)
+
+def convolve_padded(f, g, npad=2):
+    """ convolve two 2D complex Fourier transforms 'f' and 'g', using padding by a factor of npad to avoid aliasing.
+           returns r(L) = \int{d^2\vec{l}} f(l) g(L-l).
+    """
+    return (unpad_ft(np.fft.fft2(
+                np.fft.ifft2(pad_ft(f,npad=npad)) *
+                np.fft.ifft2(pad_ft(g,npad=npad))),
+                     npad=npad)*npad**2)
