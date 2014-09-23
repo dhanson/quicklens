@@ -250,8 +250,6 @@ class phi_EB(qest.qest):
         self.wl[3][1] = self.wo_di; self.sl[3][1] = -2
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
 
-        self.npad_conv = 2 
-
     def wo_di(self, l, lx, ly):
         return +0.25j
     def wo_mi(self, l, lx, ly):
@@ -393,3 +391,83 @@ class psi_TT(qest.qest):
         return l
     def wc_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.cltt)), self.cltt, right=0 ) * l
+
+class blen_EP(qest.qest):
+    """ E-mode-phi (EP) estimator for the lensed B-mode. """
+    def __init__(self, clee, clpp):
+        """ initialize the EP lensing B-mode estimator.
+             * clee = lensed E-mode power spectrum.
+             * clpp = gradient-mode lensing potential power spectrum.
+        """
+        self.clee = clee
+        self.clpp = clpp
+        self.ntrm = 4
+
+        self.wl = { i : {} for i in xrange(0, self.ntrm) }
+        self.sl = { i : {} for i in xrange(0, self.ntrm) }
+
+        # t de
+        self.wl[0][0] = self.wc_ml; self.sl[0][0] = +3
+        self.wl[0][1] = self.wp_ml; self.sl[0][1] = -1
+        self.wl[0][2] = self.wo_di; self.sl[0][2] = +2
+
+        self.wl[1][0] = self.wc_ml; self.sl[1][0] = -3
+        self.wl[1][1] = self.wp_ml; self.sl[1][1] = +1
+        self.wl[1][2] = self.wo_mi; self.sl[1][2] = -2
+
+        self.wl[2][0] = self.wc_ml; self.sl[2][0] = -1
+        self.wl[2][1] = self.wp_ml; self.sl[2][1] = -1
+        self.wl[2][2] = self.wo_mi; self.sl[2][2] = -2
+
+        self.wl[3][0] = self.wc_ml; self.sl[3][0] = +1
+        self.wl[3][1] = self.wp_ml; self.sl[3][1] = +1
+        self.wl[3][2] = self.wo_di; self.sl[3][2] = +2
+
+    def wo_di(self, l, lx, ly):
+        return -0.25j
+    def wo_mi(self, l, lx, ly):
+        return +0.25j
+    def wc_ml(self, l, lx, ly):
+        return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
+    def wp_ml(self, l, lx, ly):
+        return np.interp( l, np.arange(0, len(self.clpp)), self.clpp, right=0 ) * l
+
+class qest_blm_EX(qest):
+    """ E-mode-psi (EX) estimator for the lensed B-mode. """
+    def __init__(self, clee, clpp):
+        """ initialize the EP lensing B-mode estimator.
+             * clee = lensed E-mode power spectrum.
+             * clpp = curl-mode lensing potential power spectrum.
+        """
+        self.clee = clee
+        self.clpp = clpp
+        self.ntrm = 4
+
+        self.wl = { i : {} for i in xrange(0, self.ntrm) }
+        self.sl = { i : {} for i in xrange(0, self.ntrm) }
+
+        # t de
+        self.wl[0][0] = self.wc_ml; self.sl[0][0] = +3
+        self.wl[0][1] = self.wp_ml; self.sl[0][1] = -1
+        self.wl[0][2] = self.wo_di; self.sl[0][2] = +2
+
+        self.wl[1][0] = self.wc_ml; self.sl[1][0] = -3
+        self.wl[1][1] = self.wp_ml; self.sl[1][1] = +1
+        self.wl[1][2] = self.wo_di; self.sl[1][2] = -2
+
+        self.wl[2][0] = self.wc_ml; self.sl[2][0] = -1
+        self.wl[2][1] = self.wp_ml; self.sl[2][1] = -1
+        self.wl[2][2] = self.wo_mi; self.sl[2][2] = -2
+
+        self.wl[3][0] = self.wc_ml; self.sl[3][0] = +1
+        self.wl[3][1] = self.wp_ml; self.sl[3][1] = +1
+        self.wl[3][2] = self.wo_mi; self.sl[3][2] = +2
+
+    def wo_di(self, l, lx, ly):
+        return -0.25
+    def wo_mi(self, l, lx, ly):
+        return +0.25
+    def wc_ml(self, l, lx, ly):
+        return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
+    def wp_ml(self, l, lx, ly):
+        return np.interp( l, np.arange(0, len(self.clpp)), self.clpp, right=0 ) * l
