@@ -1030,26 +1030,35 @@ class cfft(pix):
         """
         dopsi = ( (psimin, psimax, psispin) != (0., np.inf, 1) )
         
-        ell = self.get_ell().flatten()
+        l = self.get_ell().flatten()
         if dopsi:
             lx, ly = self.get_lxly()
             psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
-
+        lb = 0.5*(lbins[:-1] + lbins[1:])
+            
         if w == None:
-            w = np.ones( ell.shape )
+            w = np.ones(l.shape)
+            wb = np.ones(lb.shape)
         else:
-            w = w(ell)
-
+            wb = w(lb)
+            w = w(l)
+        
         c = self.fft.flatten()
-        w[ np.isnan(c) ] = 0.0
+        m = np.ones(c.shape)
+        
+        m[ np.isnan(c) ] = 0.0
         c[ np.isnan(c) ] = 0.0
 
         if dopsi:
-            w[ np.where( psi < psimin ) ] = 0.0
-            w[ np.where( psi >= psimax ) ] = 0.0
+            m[ np.where( psi < psimin ) ] = 0.0
+            m[ np.where( psi >= psimax ) ] = 0.0
 
-        norm, bins = np.histogram(ell, bins=lbins, weights=w); norm[ np.where(norm != 0.0) ] = 1./norm[ np.where(norm != 0.0) ]
-        clrr, bins = np.histogram(ell, bins=lbins, weights=w*c); clrr *= norm
+        norm, bins = np.histogram(ell, bins=lbins, weights=m) # get number of modes in each l-bin.
+        clrr, bins = np.histogram(ell, bins=lbins, weights=m*w*c) # bin the spectrum.
+
+        # normalize the spectrum.
+        clrr[np.nonzero(norm)] /= norm[np.nonzero(norm)]
+        clrr /= wb
     
         return spec.bcl(lbins, { 'cl' : clrr } )
 

@@ -268,10 +268,12 @@ class lcl(object):
         l = 0.5*(l[:-1] + l[1:]) # get bin centers
         w = w(l)
         
-        norm, bins = np.histogram(l, bins=lbins, weights=np.nan_to_num(self.nm)) # get weights in each l-bin
-        spec, bins = np.histogram(l, bins=lbins, weights=w*np.nan_to_num(self.nm)*np.nan_to_num(self.cl)) # bin the spectrum
+        norm, bins = np.histogram(l, bins=lbins, weights=np.nan_to_num(self.nm)) # get number of modes in each l-bin.
+        spec, bins = np.histogram(l, bins=lbins, weights=w*np.nan_to_num(self.nm)*np.nan_to_num(self.cl)) # bin the spectrum.
 
-        spec[np.nonzero(norm)] /= norm[np.nonzero(norm)]*wb # normalize the spectrum
+        # normalize the spectrum
+        spec[np.nonzero(norm)] /= norm[np.nonzero(norm)]
+        spec /= wb
         
         return bcl(lbins, {'cl' : spec})
 
