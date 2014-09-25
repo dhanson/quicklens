@@ -6,6 +6,7 @@
 # they use weight functions W for combinations of temperature (T) and
 # polarization (E,B) from Hu et. al. http://arxiv.org/abs/astro-ph/0111606
 
+import numpy as np
 import qest
 
 class phi_TT(qest.qest):
@@ -432,7 +433,7 @@ class blen_EP(qest.qest):
     def wp_ml(self, l, lx, ly):
         return np.interp( l, np.arange(0, len(self.clpp)), self.clpp, right=0 ) * l
 
-class qest_blm_EX(qest):
+class qest_blm_EX(qest.qest):
     """ E-mode-psi (EX) estimator for the lensed B-mode. """
     def __init__(self, clee, clpp):
         """ initialize the EP lensing B-mode estimator.

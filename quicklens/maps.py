@@ -1053,8 +1053,8 @@ class cfft(pix):
             m[ np.where( psi < psimin ) ] = 0.0
             m[ np.where( psi >= psimax ) ] = 0.0
 
-        norm, bins = np.histogram(ell, bins=lbins, weights=m) # get number of modes in each l-bin.
-        clrr, bins = np.histogram(ell, bins=lbins, weights=m*w*c) # bin the spectrum.
+        norm, bins = np.histogram(l, bins=lbins, weights=m) # get number of modes in each l-bin.
+        clrr, bins = np.histogram(l, bins=lbins, weights=m*w*c) # bin the spectrum.
 
         # normalize the spectrum.
         clrr[np.nonzero(norm)] /= norm[np.nonzero(norm)]

@@ -78,27 +78,27 @@ def qe_cov_fill_helper( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False,
     nx, ny = l.shape
 
     if fX.shape != l.shape:
-        assert( len(f1.shape) == 1 )
+        assert( len(fX.shape) == 1 )
         fX = np.interp( l.flatten(), np.arange(0, len(fX)), fX, right=0 ).reshape(l.shape)
 
     if fY.shape != l.shape:
-        assert( len(f2.shape) == 1 )
+        assert( len(fY.shape) == 1 )
         fY = np.interp( l.flatten(), np.arange(0, len(fY)), fY, right=0 ).reshape(l.shape)
 
     i1_ZA, i2_ZA = { False : (0,1), True : (1,0) }[switch_ZA]
     cfunc_ZA = { False : lambda v : v, True : lambda v : np.conj(v) }[conj_ZA]
 
-    fft = ret.fft
+    ret.fft[:,:] = 0.0
     for i in xrange(0, qeXY.ntrm):
         for j in xrange(0, qeZA.ntrm):
             term1 = (qeXY.wl[i][0](l, lx, ly) * cfunc_ZA(qeZA.wl[j][i1_ZA](l, lx, ly)) * fX * 
-                  np.exp(+1.j*(qeXY.sl[i][i1_XY]+(-1)**(conj_ZA)*qeZA.sl[j][i1_ZA])*psi))
+                  np.exp(+1.j*(qeXY.sl[i][0]+(-1)**(conj_ZA)*qeZA.sl[j][i1_ZA])*psi))
             term2 = (qeXY.wl[i][1](l, lx, ly) * cfunc_ZA(qeZA.wl[j][i2_ZA](l, lx, ly)) * fY *
-                  np.exp(+1.j*(qeXY.sl[i][i2_XY]+(-1)**(conj_ZA)*qeZA.sl[j][i2_ZA])*psi))
+                  np.exp(+1.j*(qeXY.sl[i][1]+(-1)**(conj_ZA)*qeZA.sl[j][i2_ZA])*psi))
 
-            fft[:,:] += ( math.convolve_padded(term1, term2, npad=npad) * 0.25 / (ret.dx * ret.dy) *
-                          ( qeXY.wl[i][2](l, lx, ly) * cfunc_ZA(qeZA.wl[j][2](l, lx, ly)) *
-                            ( np.exp(-1.j*(qeXY.sl[i][2]+(-1)**(conj_ZA)*qeZA.sl[j][2])*psi) ) ) )
+            ret.fft[:,:] += ( math.convolve_padded(term1, term2, npad=npad) * 0.25 / (ret.dx * ret.dy) *
+                             ( qeXY.wl[i][2](l, lx, ly) * cfunc_ZA(qeZA.wl[j][2](l, lx, ly)) *
+                              ( np.exp(-1.j*(qeXY.sl[i][2]+(-1)**(conj_ZA)*qeZA.sl[j][2])*psi) ) ) )
 
     return ret
 
@@ -176,22 +176,22 @@ class qest():
         ret.fft[:,:] = 0.0
         qe_cov_fill_helper( self, qeZA, ret, fX, fY, npad=npad)
         ret.fft[:,:] *= 2.0 # multiply by 2 because qe_cov_fill_helper returns 1/2 the response.
-        return cfft
+        return ret
 
-    def fill_clqq( self, cfft, fXX, fXY, fYY, npad=2):
+    def fill_clqq( self, ret, fXX, fXY, fYY, npad=2):
         """ compute the ensemble-averaged auto-power < |q^{XY}(L)[\bar{X}, \bar{Y}]|^2 >,
         given estimates of the auto- and cross-spectra of \bar{X} and \bar{Y}.
 
-             * cfft            = complex Fourier transform (maps.cfft) object defining the pixelization on which to evaluate the auto-power.
+             * ret             = complex Fourier transform (maps.cfft) object defining the pixelization on which to evaluate the auto-power.
              * fXX             = estimate of <\bar{X} \bar{X}^*>
              * fXY             = estimate of <\bar{X} \bar{Y}^*>
              * fYY             = estimate of <\bar{Y} \bar{Y}^*>
              * (optional) npad = padding factor to avoid aliasing in the convolution.
         """
-        cfft.fft[:,:] = 0.0
-        qe_cov_fill_helper( self, self, cfft, fXX, fYY, switch_ZA=False, conj_ZA=True, npad=npad )
-        qe_cov_fill_helper( self, self, cfft, fXY, fXY, switch_ZA=True,  conj_ZA=True, npad=npad )
-        return cfft
+        ret.fft[:,:] = 0.0
+        qe_cov_fill_helper( self, self, ret, fXX, fYY, switch_ZA=False, conj_ZA=True, npad=npad )
+        qe_cov_fill_helper( self, self, ret, fXY, fXY, switch_ZA=True,  conj_ZA=True, npad=npad )
+        return ret
 
     def get_slX(self, i):
         return self.sl[i][0]
