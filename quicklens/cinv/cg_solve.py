@@ -23,7 +23,7 @@ def cg_solve_simple( x, b, fwd_op, pre_op, dot_op, iter_max=1000, eps_min=1.0e-5
     return (iter, delta/d0)
 
 def cg_solve(x, b, fwd_op, pre_op, dot_op, criterion, apply_prep_op=None, apply_fini_op=None, roundoff=50):
-    """ customizable conjugate gradient solver for fwd_op(x)=b.
+    """ customizable conjugate gradient solver for Ax=b.
          * x             = storage buffer for solution (also used as initial guess, so typically initialize to zero).
          * b             = vector representing the right-hand-side of the equation above.
          * fwd_op        = function fwd_op(x) which returns Ax (the 'forward operation').
@@ -50,7 +50,7 @@ def cg_solve(x, b, fwd_op, pre_op, dot_op, criterion, apply_prep_op=None, apply_
     if (apply_fini_op is not None): apply_fini_op(x)
 
 def cg_iterator( x, b, fwd_op, pre_op, dot_op, roundoff=50 ):
-    """ conjugate gradient iterator for x=[fwd_op]^{-1}b.
+    """ conjugate gradient iterator for solving Ax=b.
     for information on arguments, see cg_solve. """
     residual  = b - fwd_op(x)
     searchdir = pre_op(residual)
