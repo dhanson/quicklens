@@ -20,6 +20,8 @@ import numpy as np
 from .. import maps
 from .. import spec
 
+import util
+
 class library_tqu_sum():
     """ helper library for combining a list of [tqumap] libraries into a sum. if data is requested, it is pulled from the first library. """
     def __init__(self, cpts):
