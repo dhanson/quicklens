@@ -67,3 +67,38 @@ def calc_lensing_clbb_flat_sky_first_order_curl(lbins, nx, dx, cl_unl, w=None):
     qeep = qest.qest_blm_EX( np.sqrt(cl_unl.clee), np.sqrt(cl_unl.clpp) )
     qeep.fill_resp( qeep, ret, np.ones(cl_unl.lmax+1), 2.*np.ones(cl_unl.lmax+1) )
     return ret.get_ml(lbins, w=w)
+
+def make_lensed_map_flat_sky( tqumap, phifft, psi=0.0 ):
+    """ perform the remapping operation of lensing in the flat-sky approximation.
+         tqumap         = unlensed tqumap object to sample from.
+         phifft         = phi field to calculate the deflection d=\grad\phi from.
+         (optional) psi = angle to rotate the deflection field by, in radians (e.g. psi=pi/2 results in phi being treated as a curl potential).
+    """
+    assert( maps.pix.compatible( tqumap, phifft ) )
+
+    lx, ly = phifft.get_lxly()
+    nx, ny = phifft.nx, phifft.ny
+    dx, dy = phifft.dx, phifft.dy
+
+    pfft   = phifft.fft
+
+    # deflection field
+    x, y   = np.meshgrid( np.arange(0,nx)*dx, np.arange(0,ny)*dy )
+    gpx    = np.fft.irfft2( pfft * lx * -1.j * np.sqrt( (nx*ny)/(dx*dy) ) )
+    gpy    = np.fft.irfft2( pfft * ly * -1.j * np.sqrt( (nx*ny)/(dx*dy) ) )
+
+    if psi != 0.0:
+        gp = (gpx + 1.j*gpy)*np.exp(1.j*psi)
+        gpx = gp.real
+        gpy = gp.imag
+
+    drms   = np.average( dx**2 + dy**2 ) * 180.*60./np.pi
+    lxs    = (x+gpx).flatten(); del x, gpx
+    lys    = (y+gpy).flatten(); del y, gpy
+
+    # interpolate
+    tmap   = scipy.interpolate.RectBivariateSpline( np.arange(0,ny)*dy, np.arange(0,nx)*dx, tqumap.tmap ).ev(lys, lxs).reshape([ny,nx])
+    qmap   = scipy.interpolate.RectBivariateSpline( np.arange(0,ny)*dy, np.arange(0,nx)*dx, tqumap.qmap ).ev(lys, lxs).reshape([ny,nx])
+    umap   = scipy.interpolate.RectBivariateSpline( np.arange(0,ny)*dy, np.arange(0,nx)*dx, tqumap.umap ).ev(lys, lxs).reshape([ny,nx])
+
+    return maps.tqumap( nx, dx, [tmap, qmap, umap], ny = ny, dy = dy )
