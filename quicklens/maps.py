@@ -520,6 +520,47 @@ class tebfft(pix):
                  'efft' : hashlib.sha1(self.efft.view(np.uint8)).hexdigest(),
                  'bfft' : hashlib.sha1(self.bfft.view(np.uint8)).hexdigest() }
 
+    def get_ml( self, lbins, t=None, psimin=0., psimax=np.inf, psispin=1 ):
+        """" returns a Cl object containing average over rings of the FFT.
+                 * lbins   = list of bin edges.
+                 * t       = function t(l) which scales the FFT before averaging. defaults to unity.
+                 * psimin, psimax, psispin = parameters used to set wedges for the averaging.
+                         psi = mod(psispin * arctan2(lx, -ly), 2pi) in the range [psimin, psimax].
+        """
+        dopsi = ( (psimin, psimax, psispin) != (0., np.inf, 1) )
+        
+        l = self.get_ell().flatten()
+        if dopsi:
+            lx, ly = self.get_lxly()
+            psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
+        lb = 0.5*(lbins[:-1] + lbins[1:])
+            
+        if t == None:
+            t = np.ones(l.shape)
+        else:
+            t = t(l)
+
+        cldict = {}
+        for field in ['t', 'e', 'b']:
+            c = getattr(self, field + 'fft').flatten()
+            m = np.ones(c.shape)
+        
+            m[ np.isnan(c) ] = 0.0
+            c[ np.isnan(c) ] = 0.0
+
+            if dopsi:
+                m[ np.where( psi < psimin ) ] = 0.0
+                m[ np.where( psi >= psimax ) ] = 0.0
+
+            norm, bins = np.histogram(l, bins=lbins, weights=m) # get number of modes in each l-bin.
+            clrr, bins = np.histogram(l, bins=lbins, weights=m*t*c) # bin the spectrum.
+
+            # normalize the spectrum.
+            clrr[np.nonzero(norm)] /= norm[np.nonzero(norm)]
+            cldict['cl' + field*2] = clrr
+    
+        return spec.bcl(lbins, cldict )
+    
     def __imul__(self, other):
         if ( np.isscalar(other) or ( (type(other) == np.ndarray) and
                                      (getattr(other, 'shape', None) == self.tfft.shape) ) ):
