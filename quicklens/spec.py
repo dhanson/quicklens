@@ -256,24 +256,26 @@ class lcl(object):
             return ret
         else:
             assert(0)
-    def get_ml(self, lbins, w=lambda l : 1.):
+    def get_ml(self, lbins, t=lambda l : 1.):
         """ rebins this spectrum with non-uniform binning as a bcl object.
              * lbins        = list definining the bin edges [lbins[0], lbins[1]], [lbins[1], lbins[2]], ...
-             * (optional) w = l-dependent weight function to apply when accumulating into bins (in addition to number of modes in each bin).
+             * (optional) w = l-dependent scaling to apply when accumulating into bins (in addition to number of modes in each bin).
         """
         lb = 0.5*(lbins[:-1] + lbins[1:])
-        wb = w(lb)
+        tb = t(lb)
         
         l = np.arange(0, self.lmax+1, 1)
         l = 0.5*(l[:-1] + l[1:]) # get bin centers
-        w = w(l)
+        t = t(l)
         
-        norm, bins = np.histogram(l, bins=lbins, weights=np.nan_to_num(self.nm)) # get number of modes in each l-bin.
-        spec, bins = np.histogram(l, bins=lbins, weights=w*np.nan_to_num(self.nm)*np.nan_to_num(self.cl)) # bin the spectrum.
+        modes = np.nan_to_num(self.nm)
+        
+        norm, bins = np.histogram(l, bins=lbins, weights=modes) # get number of modes in each l-bin.
+        spec, bins = np.histogram(l, bins=lbins, weights=t*modes*np.nan_to_num(self.cl)) # bin the spectrum.
 
         # normalize the spectrum
         spec[np.nonzero(norm)] /= norm[np.nonzero(norm)]
-        spec /= wb
+        spec /= tb
         
         return bcl(lbins, {'cl' : spec})
 
@@ -347,7 +349,7 @@ class bcl(object):
 
         return self
 
-    def get_ml(self, lbins, w=lambda l : 1.):
+    def get_ml(self, lbins, t=lambda l : 1.):
         """ rebin this spectrum to wider lbins.
         currently only implemented for trivial case where lbins are the same as those used by this object. """
         if np.all(self.lbins == lbins):
@@ -555,7 +557,7 @@ class blmat_teb(clmat_teb):
                                                          'clee' : bl,
                                                          'clbb' : bl } ) )
 
-def rcfft2cl( lbins, r1, r2=None, w=None, psimin=0., psimax=np.inf, psispin=1 ):
+def rcfft2cl( lbins, r1, r2=None, t=None, psimin=0., psimax=np.inf, psispin=1 ):
     """ calculate the annulus-averaged auto- or cross-spectrum of rfft or cfft object(s),
     for bins described by lbins and a weight function w=w(l).
             * lbins          = list of bin edges.
@@ -577,31 +579,33 @@ def rcfft2cl( lbins, r1, r2=None, w=None, psimin=0., psimax=np.inf, psispin=1 ):
         lx, ly = r1.get_lxly()
         psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
 
-    if w == None:
-        w = np.ones( ell.shape )
+    wvec = np.ones(ell.shape)
+        
+    if t == None:
+        tvec = np.ones( ell.shape )
     else:
-        w = w(ell)
+        tvec = t(ell)
 
-    c = (r1.fft * np.conj(r2.fft)).flatten()
-    w[ np.isnan(c) ] = 0.0
-    c[ np.isnan(c) ] = 0.0
+    cvec = (r1.fft * np.conj(r2.fft)).flatten()
+    wvec[ np.isnan(c) ] = 0.0
+    cvec[ np.isnan(c) ] = 0.0
 
     if dopsi:
         w[ np.where( psi < psimin ) ] = 0.0
         w[ np.where( psi >= psimax ) ] = 0.0
 
-    norm, bins = np.histogram(ell, bins=lbins, weights=w); norm[ np.where(norm != 0.0) ] = 1./norm[ np.where(norm != 0.0) ]
-    clrr, bins = np.histogram(ell, bins=lbins, weights=w*c); clrr *= norm
+    norm, bins = np.histogram(ell, bins=lbins, weights=wvec); norm[ np.where(norm != 0.0) ] = 1./norm[ np.where(norm != 0.0) ]
+    clrr, bins = np.histogram(ell, bins=lbins, weights=tvec*cvec*wvec); clrr *= norm
 
     return bcl(lbins, { 'cl' : clrr } )
 
-def tebfft2cl( lbins, teb1, teb2=None, w=None,  psimin=0., psimax=np.inf, psispin=1  ):
+def tebfft2cl( lbins, teb1, teb2=None, t=None,  psimin=0., psimax=np.inf, psispin=1  ):
     """ calculate the annulus-averaged auto- or cross-spectrum of tebfft object(s),
     for bins described by lbins and a weight function w=w(l).
             * lbins           = list of bin edges.
             * teb1            = tebfft object.
             * (optional) teb2 = second tebfft object to cross-correlate with teb1 (defaults to teb1, returning auto-spectrum).
-            * (optional) w    = function w(l) which weights the FFT when averaging. defaults to w(l)=1.
+            * (optional) t    = function t(l) which scales FFT when averaging. defaults to t(l)=1.
             * (optional) psimin, psimax, psispin = parameters used to set wedges for the annular average, only including
                    psi = mod(psispin * arctan2(lx, -ly), 2pi) in the range [psimin, psimax].
     """
@@ -616,23 +620,25 @@ def tebfft2cl( lbins, teb1, teb2=None, w=None,  psimin=0., psimax=np.inf, psispi
     if dopsi:
         lx, ly = teb1.get_lxly()
         psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
-    
-    if w == None:
-        w = 1.0
+
+    wvec = np.ones(ell.shape)
+        
+    if t == None:
+        tvec = np.ones(ell.shape)
     else:
-        w = w(ell)
+        tvec = t(ell)
 
     if dopsi:
-        w[ np.where( psi < psimin ) ] = 0.0
-        w[ np.where( psi >= psimax ) ] = 0.0
+        wvec[ np.where( psi < psimin ) ] = 0.0
+        wvec[ np.where( psi >= psimax ) ] = 0.0
 
-    norm, bins = np.histogram(ell, bins=lbins, weights=w); norm[ np.where(norm != 0.0) ] = 1./norm[ np.where(norm != 0.0) ]
-    cltt, bins = np.histogram(ell, bins=lbins, weights=w*(teb1.tfft * np.conj(teb2.tfft)).flatten().real); cltt *= norm
-    clte, bins = np.histogram(ell, bins=lbins, weights=w*(teb1.tfft * np.conj(teb2.efft)).flatten().real); clte *= norm
-    cltb, bins = np.histogram(ell, bins=lbins, weights=w*(teb1.tfft * np.conj(teb2.bfft)).flatten().real); cltb *= norm
-    clee, bins = np.histogram(ell, bins=lbins, weights=w*(teb1.efft * np.conj(teb2.efft)).flatten().real); clee *= norm
-    cleb, bins = np.histogram(ell, bins=lbins, weights=w*(teb1.efft * np.conj(teb2.bfft)).flatten().real); cleb *= norm
-    clbb, bins = np.histogram(ell, bins=lbins, weights=w*(teb1.bfft * np.conj(teb2.bfft)).flatten().real); clbb *= norm
+    norm, bins = np.histogram(ell, bins=lbins, weights=wvec); norm[ np.where(norm != 0.0) ] = 1./norm[ np.where(norm != 0.0) ]
+    cltt, bins = np.histogram(ell, bins=lbins, weights=wvec*tvec*(teb1.tfft * np.conj(teb2.tfft)).flatten().real); cltt *= norm
+    clte, bins = np.histogram(ell, bins=lbins, weights=wvec*tvec*(teb1.tfft * np.conj(teb2.efft)).flatten().real); clte *= norm
+    cltb, bins = np.histogram(ell, bins=lbins, weights=wvec*tvec*(teb1.tfft * np.conj(teb2.bfft)).flatten().real); cltb *= norm
+    clee, bins = np.histogram(ell, bins=lbins, weights=wvec*tvec*(teb1.efft * np.conj(teb2.efft)).flatten().real); clee *= norm
+    cleb, bins = np.histogram(ell, bins=lbins, weights=wvec*tvec*(teb1.efft * np.conj(teb2.bfft)).flatten().real); cleb *= norm
+    clbb, bins = np.histogram(ell, bins=lbins, weights=wvec*tvec*(teb1.bfft * np.conj(teb2.bfft)).flatten().real); clbb *= norm
 
     return bcl(lbins, { 'cltt' : cltt,
                         'clte' : clte,
@@ -648,16 +654,16 @@ def cross_cl( lbins, r1, r2=None, w=None ):
     assert( r1.compatible( r2 ) )
 
     if maps.is_tebfft(r1):
-        return tebfft2cl(lbins, r1, r2, w=w)
+        return tebfft2cl(lbins, r1, r2, t=t)
     elif maps.is_rfft(r1):
-        return rcfft2cl(lbins, r1, r2, w=w)
+        return rcfft2cl(lbins, r1, r2, t=t)
     elif maps.is_cfft(r1):
-        return rcfft2cl(lbins, r1, r2, w=w)
+        return rcfft2cl(lbins, r1, r2, t=t)
     else:
         assert(0)
 
 def cl2cfft(cl, pix):
-    """ returns a cfft object with the pixelization pix, with FFT(lx,ly) = linear interpolation of cl[l] at l = sqrt(lx**2 + ly**2). """
+    """ returns a maps.cfft object with the pixelization pix, with FFT(lx,ly) = linear interpolation of cl[l] at l = sqrt(lx**2 + ly**2). """
     ell = pix.get_ell().flatten()
     
     ret = maps.cfft( nx=pix.nx, dx=pix.dx,

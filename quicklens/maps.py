@@ -645,9 +645,9 @@ class tebfft(pix):
         """ return the FFT describing the map-level transfer function for the pixelization of this object. """
         return rfft( self.nx, self.dx, ny=self.ny, dy=self.dy ).get_pix_transf()
 
-    def get_cl( self, lbins, w=None, psimin=0., psimax=np.inf, psispin=1 ):
+    def get_cl( self, lbins, t=None, psimin=0., psimax=np.inf, psispin=1 ):
         """ returns a Cl object containing the auto-spectra of T,E,B in this map. """
-        return spec.tebfft2cl( lbins, self, w=w, psimin=psimin, psimax=psimax, psispin=psispin  )
+        return spec.tebfft2cl( lbins, self, t=t, psimin=psimin, psimax=psimax, psispin=psispin  )
 
     def get_tqu(self):
         """ returns the tqumap given by the inverse Fourier transform of this object. """
@@ -859,8 +859,8 @@ class rfft(pix):
     def copy(self):
         return rfft( self.nx, self.dx, self.fft.copy(), ny = self.ny, dy = self.dy )
 
-    def get_cl( self, lbins, w=None ):
-        return spec.rcfft2cl( lbins, self, w=w )
+    def get_cl( self, lbins, t=None ):
+        return spec.rcfft2cl( lbins, self, t=t )
 
     def get_rmap( self ):
         """ return the rmap given by this FFT. """
@@ -1017,14 +1017,14 @@ class cfft(pix):
         ret.fft = np.conj(ret.fft)
         return ret
 
-    def get_cl( self, lbins, w=None ):
+    def get_cl( self, lbins, t=None ):
         """ returns a Cl object containing the auto-spectra of this map. """
-        return spec.rcfft2cl( lbins, self, w=w )
+        return spec.rcfft2cl( lbins, self, t=t )
 
-    def get_ml( self, lbins, w=None, psimin=0., psimax=np.inf, psispin=1 ):
+    def get_ml( self, lbins, t=None, psimin=0., psimax=np.inf, psispin=1 ):
         """" returns a Cl object containing average over rings of the FFT.
                  * lbins   = list of bin edges.
-                 * w       = function w(l) which weights the FFT when averaging.
+                 * t       = function t(l) which weights the FFT before averaging. defaults to unity.
                  * psimin, psimax, psispin = parameters used to set wedges for the averaging.
                          psi = mod(psispin * arctan2(lx, -ly), 2pi) in the range [psimin, psimax].
         """
@@ -1036,12 +1036,10 @@ class cfft(pix):
             psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
         lb = 0.5*(lbins[:-1] + lbins[1:])
             
-        if w == None:
-            w = np.ones(l.shape)
-            wb = np.ones(lb.shape)
+        if t == None:
+            t = np.ones(l.shape)
         else:
-            wb = w(lb)
-            w = w(l)
+            t = t(l)
         
         c = self.fft.flatten()
         m = np.ones(c.shape)
@@ -1054,11 +1052,10 @@ class cfft(pix):
             m[ np.where( psi >= psimax ) ] = 0.0
 
         norm, bins = np.histogram(l, bins=lbins, weights=m) # get number of modes in each l-bin.
-        clrr, bins = np.histogram(l, bins=lbins, weights=m*w*c) # bin the spectrum.
+        clrr, bins = np.histogram(l, bins=lbins, weights=m*t*c) # bin the spectrum.
 
         # normalize the spectrum.
         clrr[np.nonzero(norm)] /= norm[np.nonzero(norm)]
-        clrr /= wb
     
         return spec.bcl(lbins, { 'cl' : clrr } )
 
