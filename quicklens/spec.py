@@ -672,6 +672,17 @@ def cl2cfft(cl, pix):
 
     return ret
 
+def cl2tebfft(cl, pix):
+    """ returns a maps.tebfft object with the pixelization pix and [T,E,B]FFT(lx,ly) = linear interpolation of cl.cltt[l], cl.clee[l], cl.clbb[l] at l = sqrt(lx**2 + ly**2). """
+    tebfft = maps.tebfft( nx=pix.nx, dx=pix.dx, ny=pix.ny, dy=pix.dy )
+    ell = tebfft.get_ell().flatten()
+    
+    tebfft.tfft = np.array( np.interp( ell, np.arange(0, cl.lmax+1), cl.cltt, right=0 ).reshape(tebfft.tfft.shape), dtype=np.complex )
+    tebfft.efft = np.array( np.interp( ell, np.arange(0, cl.lmax+1), cl.clee, right=0 ).reshape(tebfft.efft.shape), dtype=np.complex )
+    tebfft.bfft = np.array( np.interp( ell, np.arange(0, cl.lmax+1), cl.clbb, right=0 ).reshape(tebfft.bfft.shape), dtype=np.complex )
+
+    return maps.tebfft( nx=pix.nx, dx=pix.dx, ffts=[tebfft.tfft, tebfft.efft, tebfft.bfft], ny=pix.ny, dy=pix.dy )
+
 def plot_cfft_cl2d( cfft, cfft2=None, smth=0, lcnt=None, cm=pl.cm.jet, t = lambda l, v : np.log(np.abs(v)), axlab=True, vmin=None, vmax=None, cbar=False):
     """ plot the two-dimensional auto- or cross- power of a cfft object.
           * cfft              = cfft object for auto- or cross-spectrum.
