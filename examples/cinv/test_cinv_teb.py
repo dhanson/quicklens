@@ -9,6 +9,7 @@ import pylab as pl
 import quicklens as ql
 
 multigrid  = False                                 # use a multigrid preconditioner.
+eps_min    = 1.e-4
 lmax       = 3000                                  # maximum multipole.
 nx         = 512                                   # size of map (in pixels).
 dx         = 1./60./180.*np.pi                     # size of pixels (in radians).
@@ -57,7 +58,7 @@ pre_op = ql.cinv.opfilt_teb.pre_op_diag( sinv_filt, ninv_filt )
 
 # run solver
 if multigrid == True:
-    chain = ql.cinv.multigrid.chain( 0, ql.cinv.opfilt_teb, sinv_filt, ninv_filt, plogdepth=2 )
+    chain = ql.cinv.multigrid.chain( 0, ql.cinv.opfilt_teb, sinv_filt, ninv_filt, plogdepth=2, eps_min=eps_min )
     teb_filt_cinv = chain.solve( ql.maps.tebfft( nx, dx ), tqu_obs )
 else:
     monitor = ql.cinv.cd_monitors.monitor_basic(ql.cinv.opfilt_teb.dot_op(), iter_max=np.inf, eps_min=eps_min)
