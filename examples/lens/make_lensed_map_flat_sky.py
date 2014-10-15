@@ -16,6 +16,7 @@ nsims      = 10
 lmax       = 3500
 nx         = 256
 dx         = 2./60./180.*np.pi
+t          = lambda l:l*(l+1.)/(2.*np.pi)
 
 lbins      = np.linspace(2, lmax, 100)
 
@@ -36,8 +37,8 @@ for idx, i in ql.util.enumerate_progress(np.arange(0, nsims)):
     tqu_len  = ql.lens.make_lensed_map_flat_sky( tqu_unl, phifft )
     teb_len  = tqu_len.get_teb()
 
-    bl_unl_avg.add( teb_unl.get_cl( lbins, w=lambda l:l*(l+1.)/(2.*np.pi) ) )
-    bl_len_avg.add( teb_len.get_cl( lbins, w=lambda l:l*(l+1.)/(2.*np.pi) ) )             
+    bl_unl_avg.add( teb_unl.get_cl( lbins, t=t ) )
+    bl_len_avg.add( teb_len.get_cl( lbins, t=t ) )  
 
 bl_unl = bl_unl_avg.get()
 bl_len = bl_len_avg.get()
@@ -45,23 +46,23 @@ bl_len = bl_len_avg.get()
 # make plots
 pl.figure()
 
-pl.loglog( cl_unl.ls, cl_unl.cltt, color='k', label='Unlensed Theory' )
-pl.loglog( cl_len.ls, cl_len.cltt, color='m', label='Lensed Theory' )
+cl_unl.plot('cltt', t=t, color='k', label='Unlensed Theory' )
+cl_len.plot('cltt', t=t, color='m', label='Lensed Theory')
 pl.loglog( bl_unl.ls, bl_unl.cltt, color='y', label='Unlensed Sims' )
 pl.loglog( bl_len.ls, bl_len.cltt, color='b', label='Lensed Sims' )
 
-pl.loglog( cl_unl.ls, cl_unl.clee, color='k' )
-pl.loglog( cl_len.ls, cl_len.clee, color='m' )
+cl_unl.plot('clee', t=t, color='k')
+cl_len.plot('clee', t=t, color='m')
 pl.loglog( bl_unl.ls, bl_unl.clee, color='y' )
 pl.loglog( bl_len.ls, bl_len.clee, color='b' )
 
-pl.loglog( cl_len.ls, cl_len.clbb, color='m' )
+cl_len.plot('clbb', t=t, color='m')
 pl.loglog( bl_len.ls, bl_len.clbb, color='b' )
 
 pl.xlabel(r'$l$')
 pl.ylabel(r'$l(l+1)C_l$')
 
-pl.legend(loc='upper right')
+pl.legend(loc='lower right')
 pl.setp( pl.gca().get_legend().get_frame(), visible=False )
 
 pl.ion()

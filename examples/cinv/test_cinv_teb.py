@@ -86,14 +86,14 @@ cl_len.plot( 'clbb', p=p, t=t, color='k' )
 
 # plot wiener-filtered spectra, as well as diagonal approximation.
 t = lambda l : l*(l+1.)/(2.*np.pi)
-(c * teb_filt_cinv).get_cl(lbins, w=t).plot( 'cltt', p=p, t=t, color='r', label='TT' )
-(c * teb_filt_diag).get_cl(lbins, w=t).plot( 'cltt', p=p, t=t, color='gray', ls='--' )
+(c * teb_filt_cinv).get_cl(lbins, t=t).plot( 'cltt', p=p, color='r', label='TT' )
+(c * teb_filt_diag).get_cl(lbins, t=t).plot( 'cltt', p=p, color='gray', ls='--' )
 
-(c * teb_filt_cinv).get_cl(lbins, w=t).plot( 'clee', p=p, t=t, color='m', label='EE' )
-(c * teb_filt_diag).get_cl(lbins, w=t).plot( 'clee', p=p, t=t, color='gray', ls='--' )
+(c * teb_filt_cinv).get_cl(lbins, t=t).plot( 'clee', p=p, color='m', label='EE' )
+(c * teb_filt_diag).get_cl(lbins, t=t).plot( 'clee', p=p, color='gray', ls='--' )
 
-(c * teb_filt_cinv).get_cl(lbins, w=t).plot( 'clbb', p=p, t=t, color='g', label='BB' )
-(c * teb_filt_diag).get_cl(lbins, w=t).plot( 'clbb', p=p, t=t, color='gray', ls='--' )
+(c * teb_filt_cinv).get_cl(lbins, t=t).plot( 'clbb', p=p, color='g', label='BB' )
+(c * teb_filt_diag).get_cl(lbins, t=t).plot( 'clbb', p=p, color='gray', ls='--' )
 
 # add axis details and curve labels.
 pl.legend(loc='lower left')

@@ -43,7 +43,7 @@ def calc_lensing_b_first_order( e, phi ):
     ret    *= np.sqrt(ret.nx * ret.ny) / np.sqrt(ret.dx * ret.dy)
     return ret
 
-def calc_lensing_clbb_flat_sky_first_order(lbins, nx, dx, cl_unl, w=None):
+def calc_lensing_clbb_flat_sky_first_order(lbins, nx, dx, cl_unl, t=None):
     """ evaluate the lensed B-mode power spectrum at first order in |phi|^2 on the flat-sky.
          * lbins  = array or list containing boundaries for the binned return spectrum.
          * nx     = width of the grid (in pixels) used to peform the calculation.
@@ -59,14 +59,14 @@ def calc_lensing_clbb_flat_sky_first_order(lbins, nx, dx, cl_unl, w=None):
     ret = maps.cfft(nx, dx)
     qeep = qest.lens.blen_EP( np.sqrt(cl_unl.clee), np.sqrt(cl_unl.clpp) )
     qeep.fill_resp( qeep, ret, np.ones(cl_unl.lmax+1), 2.*np.ones(cl_unl.lmax+1), npad=1 )
-    return ret.get_ml(lbins, w=w)
+    return ret.get_ml(lbins, t=t)
 
 def calc_lensing_clbb_flat_sky_first_order_curl(lbins, nx, dx, cl_unl, w=None):
     """ version of calc_lensing_clbb_flat_sky_first_order which treats cl_unl as a curl-mode lensing potential psi rather than as a gradient mode phi. """
     ret = maps.cfft(nx, dx)
     qeep = qest.qest_blm_EX( np.sqrt(cl_unl.clee), np.sqrt(cl_unl.clpp) )
     qeep.fill_resp( qeep, ret, np.ones(cl_unl.lmax+1), 2.*np.ones(cl_unl.lmax+1) )
-    return ret.get_ml(lbins, w=w)
+    return ret.get_ml(lbins, t=t)
 
 def make_lensed_map_flat_sky( tqumap, phifft, psi=0.0 ):
     """ perform the remapping operation of lensing in the flat-sky approximation.
