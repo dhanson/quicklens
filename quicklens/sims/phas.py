@@ -40,8 +40,9 @@ class library():
                 if seed != None:
                     np.random.seed(seed)
                 else:
-                    raw_input("quicklens::sims::phas: press enter to initialize random seed.")
-                    np.random.seed()
+                    keyseed = raw_input("quicklens::sims::phas: enter several random strokes on the keyboard followed by enter to initialize the random seed.\n")
+                    assert(len(keyseed) > 0)
+                    np.random.seed(np.abs(int(hash(keyseed))))
 
                 # store the current state.
                 pk.dump( np.random.get_state(), open(lib_dir + "/state_%04d.pk"%0, 'w') )
