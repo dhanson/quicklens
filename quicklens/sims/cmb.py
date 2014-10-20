@@ -27,7 +27,7 @@ class library_flat_unlensed():
         self.phase   = phase
 
         if (self.phase == None):
-            lmax = cl_cmb.lmax
+            lmax = cl_unl.lmax
             self.phase = phas.library( 8*pix.nx*(pix.ny/2+1), lib_dir = self.lib_dir + "/phase" )
 
         if (ql.mpi.rank == 0):
@@ -95,11 +95,11 @@ class library_flat_lensed():
 
         self.phase.set_state(idx)
         teb_unl = sims.tebfft( self.pix, self.cl_unl )
-        tqu_unl = teb_unl.get_tqu()
-
         phi_fft = sims.rfft( self.pix, self.cl_unl.clpp )
-        tqu_len = ql.lens.make_lensed_map_flat_sky( tqu_unl, phi_fft )
         self.phase.check_state_final(idx)
+        
+        tqu_unl = teb_unl.get_tqu()
+        tqu_len = ql.lens.make_lensed_map_flat_sky( tqu_unl, phi_fft )
 
         assert( not os.path.exists(tfname_phi_fft) )
         assert( not os.path.exists(tfname_teb_unl) )
@@ -115,7 +115,7 @@ class library_flat_lensed():
             self.cache_sim(idx)
         return pk.load( open(tfname, 'r' ) ).get_rmap()
 
-    def get_sim_kap(self, idx, fl=1.):
+    def get_sim_kappa(self, idx, fl=1.):
         tfname = self.lib_dir + "/sim_" + ('%04d' % idx) + "_phi_fft.pk"
         if not os.path.exists(tfname):
             self.cache_sim(idx)

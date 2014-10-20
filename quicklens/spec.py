@@ -19,7 +19,7 @@
 #     * cl2cfft           = function to paste a 1D power spectrum onto the 2D Fourier plane.
 #     * plot_cfft_cl2d    = function to make a 2D plot of power for a set of Fourier modes.
 
-import os, copy, glob
+import os, copy, glob, hashlib
 import numpy as np
 import pylab as pl
 
@@ -261,9 +261,6 @@ class lcl(object):
              * lbins        = list definining the bin edges [lbins[0], lbins[1]], [lbins[1], lbins[2]], ...
              * (optional) w = l-dependent scaling to apply when accumulating into bins (in addition to number of modes in each bin).
         """
-        lb = 0.5*(lbins[:-1] + lbins[1:])
-        tb = t(lb)
-        
         l = np.arange(0, self.lmax+1, 1)
         l = 0.5*(l[:-1] + l[1:]) # get bin centers
         t = t(l)
@@ -275,7 +272,6 @@ class lcl(object):
 
         # normalize the spectrum
         spec[np.nonzero(norm)] /= norm[np.nonzero(norm)]
-        spec /= tb
         
         return bcl(lbins, {'cl' : spec})
 

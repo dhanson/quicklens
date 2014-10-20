@@ -224,7 +224,7 @@ class phi_EE(qest.qest):
 
 class phi_EB(qest.qest):
     """ EB lensing potential gradient-mode estimator. """
-    def __init__(self, clte):
+    def __init__(self, clee):
         """ initialize the EB lensing potential gradient-mode estimator.
              * clte = lensed TE power spectrum.
         """

@@ -92,7 +92,6 @@ def make_lensed_map_flat_sky( tqumap, phifft, psi=0.0 ):
         gpx = gp.real
         gpy = gp.imag
 
-    drms   = np.average( dx**2 + dy**2 ) * 180.*60./np.pi
     lxs    = (x+gpx).flatten(); del x, gpx
     lys    = (y+gpy).flatten(); del y, gpy
 

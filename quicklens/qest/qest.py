@@ -88,7 +88,6 @@ def qe_cov_fill_helper( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False,
     i1_ZA, i2_ZA = { False : (0,1), True : (1,0) }[switch_ZA]
     cfunc_ZA = { False : lambda v : v, True : lambda v : np.conj(v) }[conj_ZA]
 
-    ret.fft[:,:] = 0.0
     for i in xrange(0, qeXY.ntrm):
         for j in xrange(0, qeZA.ntrm):
             term1 = (qeXY.wl[i][0](l, lx, ly) * cfunc_ZA(qeZA.wl[j][i1_ZA](l, lx, ly)) * fX * 
