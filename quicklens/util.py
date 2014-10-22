@@ -18,18 +18,55 @@ def enumerate_progress(list, label='', clear=False):
     """
     t0 = time.time()
     ni = len(list)
+
+    class printer:
+        def __init__(self):
+            self.stdout  = sys.stdout
+            sys.stdout   = self
+            self.cpct    = 0
+
+        def __del(self):
+            self.stop()
+
+        def stop(self):
+            sys.stdout   = self.stdout
+
+        def write(self,text):
+            if (text != "\n"):
+                self.stdout.write("\r")
+                self.stdout.write("\033[K")
+                self.stdout.write(text)
+            else:
+                self.stdout.write(text)
+                self.write_bar()
+                self.flush()
+
+        def write_bar(self, cpct=None):
+            if cpct == None:
+                cpct = self.cpct
+            self.cpct = cpct
+
+            dt = time.time() - t0
+            dh = np.floor( dt / 3600. )
+            dm = np.floor( np.mod(dt, 3600.) / 60.)
+            ds = np.floor( np.mod(dt, 60) )
+
+            self.stdout.write( "\r [" + ('%02d:%02d:%02d' % (dh, dm, ds)) + "] " + label + " " + int(10. * cpct / 100)*"-" + "> " + ("%02d" % cpct) + r"%" )
+
+        def flush(self):
+            self.stdout.flush()
+
+    printer = printer()
+
     for i, v in enumerate(list):
         yield i, v
         ppct = int(100. * (i-1) / ni)
         cpct = int(100. * (i+0) / ni)
         if cpct > ppct:
-            dt = time.time() - t0
-            dh = np.floor( dt / 3600. )
-            dm = np.floor( np.mod(dt, 3600.) / 60.)
-            ds = np.floor( np.mod(dt, 60) )
-            sys.stdout.write( "\r [" + ('%02d:%02d:%02d' % (dh, dm, ds)) + "] " +
-                              label + " " + int(10. * cpct / 100)*"-" + "> " + ("%02d" % cpct) + r"%" )
-            sys.stdout.flush()
+            printer.write_bar(cpct)
+
+    printer.stop()
+
     if clear == True:
         sys.stdout.write("\r"); sys.stdout.write("\033[K"); sys.stdout.flush()
     else:
