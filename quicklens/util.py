@@ -200,6 +200,19 @@ class log(object):
     def flush(self):
         self.log.flush()
 
+class memoize(object):
+    """ a simple memoize decorator (http://en.wikipedia.org/wiki/Memoization) """
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+    def __call__(self, *args):
+        if args in self.cache:
+            return self.cache[args]
+        else:
+            v = self.func(*args)
+            self.cache[args] = v
+            return v
+
 # some helper functions for storing np arrays in an sqlite3 database.
 def adapt_array(arr):
     out = io.BytesIO(); np.save(out, arr); out.seek(0); return buffer(out.read())
