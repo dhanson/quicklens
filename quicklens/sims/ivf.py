@@ -40,6 +40,7 @@ class library(object):
             util.hash_check( pk.load( open(lib_dir + "/sim_hash.pk", 'r') ), self.hashdict() )
 
     def hashdict(self):
+        """ return a dictionary uniquely associated with the contents of this library. """
         return { 'obs_lib' : self.obs_lib.hashdict() }
 
     def get_sim_teb(self, i):
