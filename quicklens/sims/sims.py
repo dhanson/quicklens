@@ -10,7 +10,7 @@
 #
 # library objects which perform expensive, time-consuming operations on their inputs often
 # cache results to a directory. to sanity-check that their parameters or inputs have not changed
-# since the caching was performed, they have a 'hashdict' method which returns a dictionary
+# since the caching was performed, they have a 'hashdict()' method which returns a dictionary
 # intended to uniquely characterize each library object.
 #
 

@@ -21,17 +21,17 @@
 # where \bar{X} and \bar{Y} are filtered observations of the X and Y fields,
 # and l_X+l_Y = L. Nominally, the cost of evaluating q(L) is O(lmax^{6})
 # (because l_X, l_Y, and L are each 2D fields with lmax^2 elements), however
-# if the weight function as a sum of terms which have separable dependence
-# on l_X, l_Y, and L, with the form
+# consider what happens if the weight function can be written as a sum of
+# terms which have separable dependence on l_X, l_Y, and L as
 #
-# W^{s, XY} = \sum_{i=0}^{N_i} (e^{i*2\pi*s^{i,X}} * W^{i,X}(l_X)) *
-#                               (e^{i*2\pi*s^{i,Y}} * W^{i,Y}(l_Y)) *
-#                                (e^{-i*2\pi*s^{i,L}} * W^{i,L}(L))
+# W^{s, XY} = \sum_{i=0}^{N} (e^{i*2\pi*s^{i,X}} * W^{i,X}(l_X)) *
+#                             (e^{i*2\pi*s^{i,Y}} * W^{i,Y}(l_Y)) *
+#                              (e^{-i*2\pi*s^{i,L}} * W^{i,L}(L))
 #
 # where s^{i,X/Y/L} are integers representing a spin parameter for each
 # component of the weight function. with such a weight function q(L)
 # may be evaluated in O(N_i * lmax^2 * log(lmax)) using fast Fourier
-# transforms (FFTs). in this module such weight functions and spins
+# transforms (FFTs). in this module these weight functions and spins
 # are encapsulated by the 'qest' class.
 #
 # in addition to q^{XY}(L), one often wants to evaluate
@@ -40,13 +40,13 @@
 #     filtering which relates \bar{X} to X is diagonal in
 #     Fourier space with \bar{X}(L) = F(L)X(L) then this
 #     can also be calculated quickly with FFTs, and is
-#     encapsulated in 'qest.fill_resp' method.
+#     performed by the 'qest.fill_resp' method.
 #
 #   * the ensemble-averaged cross-power <q1^{XY}(L) q2^{*ZA}(L)>,
 #     given estimates of the spectral cross-powers
 #     <\bar{X}(l)\bar{Z}^*(l)>, <\bar{X}(l),\bar{A}^*(l)>, etc.
 #     again, this cross-spectrum can be calculated quickly using FFTs.
-#     it is encapsulated in the 'qest.fill_clqq' method.
+#     it is performed by the 'qest.fill_clqq' method.
 #
 
 import numpy as np
@@ -101,7 +101,6 @@ def qe_cov_fill_helper( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False,
 
     return ret
 
-
 class qest():
     """ base class for a quadratic estiamtor q^{XY}(L),
     which can be run on fields \bar{X} and \bar{Y} as
@@ -131,8 +130,12 @@ class qest():
                         W^{XY}(l_1, l_2, L) \bar{X}(l_X) \bar{Y}(l_Y)
 
         inputs:
-             * barX            = input field \bar{X}. should be 2D complex Fourier transform (maps.cfft) object, or have a get_cfft() method to convert.
-             * barY            = input field \bar{X}. should be 2D complex Fourier transform (maps.cfft) object, or have a get_cfft() method to convert.
+             * barX            = input field \bar{X}. should be 2D complex
+                                 Fourier transform (maps.cfft) object, or have
+                                 a get_cfft() method so that it can be converted.
+             * barY            = input field \bar{X}. should be 2D complex
+                                 Fourier transform (maps.cfft) object, or have
+                                 a get_cfft() method so that it can be converted.
              * (optional) npad = padding factor to avoid aliasing in the convolution.
         """
         if hasattr(barX, 'get_cfft'):
@@ -181,7 +184,8 @@ class qest():
         """ compute the ensemble-averaged auto-power < |q^{XY}(L)[\bar{X}, \bar{Y}]|^2 >,
         given estimates of the auto- and cross-spectra of \bar{X} and \bar{Y}.
 
-             * ret             = complex Fourier transform (maps.cfft) object defining the pixelization on which to evaluate the auto-power.
+             * ret             = complex Fourier transform (maps.cfft) object defining the
+                                 pixelization on which to evaluate the auto-power.
              * fXX             = estimate of <\bar{X} \bar{X}^*>
              * fXY             = estimate of <\bar{X} \bar{Y}^*>
              * fYY             = estimate of <\bar{Y} \bar{Y}^*>

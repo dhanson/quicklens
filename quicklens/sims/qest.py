@@ -1,6 +1,6 @@
 # quicklens/sims/qest.py
 # --
-# this module contains library object which applies quadratic estimators
+# this module contains a library object which applies quadratic estimators
 # to inverse-variance filtered sky maps. in this module a 'quadratic estimator'
 # is actually a weighted sum of estimates produced by qest.qest. these estimators
 # each have a unique key, and are defined in library.init_q.
