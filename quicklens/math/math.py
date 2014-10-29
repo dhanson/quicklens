@@ -1,4 +1,4 @@
-# quicklens/math.py
+# quicklens/math/math.py
 # --
 # this module contains routines for doing geometry on the sphere
 # and template projection. overview of functions:
