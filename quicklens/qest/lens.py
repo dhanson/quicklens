@@ -16,6 +16,7 @@ class phi_TT(qest.qest):
              * cltt = lensed TT power spectrum.
         """
         self.cltt = cltt
+        self.lmax = len(cltt)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -37,11 +38,11 @@ class phi_TT(qest.qest):
         self.wl[3][1] = self.wc_ml; self.sl[3][1] = -1
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
 
-    def wo_d2(self, l, lx, ly):
+    def wo_d2(self, l, lx=None, ly=None):
         return -0.5
-    def wo_ml(self, l, lx, ly):
+    def wo_ml(self, l, lx=None, ly=None):
         return l
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.cltt)), self.cltt, right=0 ) * l
 
 class phi_TT_s0(qest.qest):
@@ -54,6 +55,7 @@ class phi_TT_s0(qest.qest):
              * cltt = lensed TT power spectrum.
         """
         self.cltt = cltt
+        self.lmax = len(cltt)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -93,6 +95,7 @@ class phi_TE(qest.qest):
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
+        self.lmax = len(clte)-1
         self.ntrm = 6
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -124,13 +127,13 @@ class phi_TE(qest.qest):
         self.wl[5][1] = self.wc_ml; self.sl[5][1] = -1
         self.wl[5][2] = self.wo_ml; self.sl[5][2] = -1
 
-    def wo_d2(self, l, lx, ly):
+    def wo_d2(self, l, lx=None, ly=None):
         return -0.50
-    def wo_d4(self, l, lx, ly):
+    def wo_d4(self, l, lx=None, ly=None):
         return -0.25
-    def wo_ml(self, l, lx, ly):
+    def wo_ml(self, l, lx=None, ly=None):
         return l
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clte)), self.clte, right=0 ) * l
 
 class phi_TB(qest.qest):
@@ -140,6 +143,7 @@ class phi_TB(qest.qest):
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
+        self.lmax = len(clte)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -162,13 +166,13 @@ class phi_TB(qest.qest):
         self.wl[3][1] = self.wo_di; self.sl[3][1] = -2
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
 
-    def wo_di(self, l, lx, ly):
+    def wo_di(self, l, lx=None, ly=None):
         return +0.25j
-    def wo_mi(self, l, lx, ly):
+    def wo_mi(self, l, lx=None, ly=None):
         return -0.25j
-    def wo_ml(self, l, lx, ly):
+    def wo_ml(self, l, lx=None, ly=None):
         return l
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clte)), self.clte, right=0 ) * l
 
 class phi_EE(qest.qest):
@@ -178,6 +182,7 @@ class phi_EE(qest.qest):
              * clee = lensed EE power spectrum.
         """
         self.clee = clee
+        self.clee = len(clee)-1
         self.ntrm = 8
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -215,11 +220,11 @@ class phi_EE(qest.qest):
         self.wl[7][1] = self.wo_d4; self.sl[7][1] = -2
         self.wl[7][2] = self.wo_ml; self.sl[7][2] = -1
 
-    def wo_d4(self, l, lx, ly):
+    def wo_d4(self, l, lx=None, ly=None):
         return -0.25
-    def wo_ml(self, l, lx, ly):
+    def wo_ml(self, l, lx=None, ly=None):
         return l
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
 
 class phi_EB(qest.qest):
@@ -229,6 +234,7 @@ class phi_EB(qest.qest):
              * clte = lensed TE power spectrum.
         """
         self.clee = clee
+        self.lmax = len(clee)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -251,13 +257,13 @@ class phi_EB(qest.qest):
         self.wl[3][1] = self.wo_di; self.sl[3][1] = -2
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
 
-    def wo_di(self, l, lx, ly):
+    def wo_di(self, l, lx=None, ly=None):
         return +0.25j
-    def wo_mi(self, l, lx, ly):
+    def wo_mi(self, l, lx=None, ly=None):
         return -0.25j
-    def wo_ml(self, l, lx, ly):
+    def wo_ml(self, l, lx=None, ly=None):
         return l
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
 
 class phi_ET(phi_TE):
@@ -267,6 +273,7 @@ class phi_ET(phi_TE):
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
+        self.lmax = len(clte)-1
         self.ntrm = 6
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -305,6 +312,7 @@ class phi_BT(phi_TB):
              * clte = lensed TE power spectrum.
         """
         self.clte = clte
+        self.lmax = len(clte)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -334,6 +342,7 @@ class phi_BE(phi_EB):
              * clee = lensed EE power spectrum.
         """
         self.clee = clee
+        self.lmax = len(clee)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -363,6 +372,7 @@ class psi_TT(qest.qest):
              * cltt = lensed TT power spectrum.
         """
         self.cltt = cltt
+        self.lmax = len(cltt)-1
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -384,13 +394,13 @@ class psi_TT(qest.qest):
         self.wl[3][1] = self.wc_ml; self.sl[3][1] = -1
         self.wl[3][2] = self.wo_ml; self.sl[3][2] = -1
 
-    def wo_d2(self, l, lx, ly):
+    def wo_d2(self, l, lx=None, ly=None):
         return -0.5j
-    def wo_n2(self, l, lx, ly):
+    def wo_n2(self, l, lx=None, ly=None):
         return +0.5j
-    def wo_ml(self, l, lx, ly):
+    def wo_ml(self, l, lx=None, ly=None):
         return l
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.cltt)), self.cltt, right=0 ) * l
 
 class blen_EP(qest.qest):
@@ -402,6 +412,10 @@ class blen_EP(qest.qest):
         """
         self.clee = clee
         self.clpp = clpp
+
+        assert(len(clee) == len(clpp))
+        self.lmax = len(clee)-1
+        
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -424,13 +438,13 @@ class blen_EP(qest.qest):
         self.wl[3][1] = self.wp_ml; self.sl[3][1] = +1
         self.wl[3][2] = self.wo_di; self.sl[3][2] = +2
 
-    def wo_di(self, l, lx, ly):
+    def wo_di(self, l, lx=None, ly=None):
         return -0.25j
-    def wo_mi(self, l, lx, ly):
+    def wo_mi(self, l, lx=None, ly=None):
         return +0.25j
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
-    def wp_ml(self, l, lx, ly):
+    def wp_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clpp)), self.clpp, right=0 ) * l
 
 class qest_blm_EX(qest.qest):
@@ -442,6 +456,10 @@ class qest_blm_EX(qest.qest):
         """
         self.clee = clee
         self.clpp = clpp
+
+        assert(len(clee) == len(clpp))
+        self.lmax = len(clee)-1
+        
         self.ntrm = 4
 
         self.wl = { i : {} for i in xrange(0, self.ntrm) }
@@ -464,11 +482,11 @@ class qest_blm_EX(qest.qest):
         self.wl[3][1] = self.wp_ml; self.sl[3][1] = +1
         self.wl[3][2] = self.wo_mi; self.sl[3][2] = +2
 
-    def wo_di(self, l, lx, ly):
+    def wo_di(self, l, lx=None, ly=None):
         return -0.25
-    def wo_mi(self, l, lx, ly):
+    def wo_mi(self, l, lx=None, ly=None):
         return +0.25
-    def wc_ml(self, l, lx, ly):
+    def wc_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clee)), self.clee, right=0 ) * l
-    def wp_ml(self, l, lx, ly):
+    def wp_ml(self, l, lx=None, ly=None):
         return np.interp( l, np.arange(0, len(self.clpp)), self.clpp, right=0 ) * l
