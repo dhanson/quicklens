@@ -1,11 +1,11 @@
 # quicklens/qest/qest.py
 # --
 # this module contains classes and routines for applying quadratic
-# anisotropy estimators to flat-sky maps.
+# anisotropy estimators to CMB maps.
 #
-# these estimators are motivated as follows. first, we start with
+# these estimators are motivated as follows: first, we start with
 # a source of statistical anisotropy 's', which is a 2D field having
-# a Fourier transform s(L). 's' induces couplings between modes of the
+# a Harmonic transform s(L). 's' induces couplings between modes of the
 # CMB temperature and polarization observables X, Y \in {T, E, B} as
 #
 # < X(l_X) Y(l_Y) > = \int{d^2 L} W^{s, XY}(l_X, l_Y, L) s(L),
@@ -18,35 +18,41 @@
 # q^{XY}(L) = 1/2 \int{d^2 l_X} \int{d^2 l_Y}
 #                    W^{s, XY}(l_X, l_Y, L) \bar{X}(l_X) \bar{Y}(l_Y)
 #
-# where \bar{X} and \bar{Y} are filtered observations of the X and Y fields,
-# and l_X+l_Y = L. Nominally, the cost of evaluating q(L) is O(lmax^{6})
-# (because l_X, l_Y, and L are each 2D fields with lmax^2 elements), however
-# consider what happens if the weight function can be written as a sum of
-# terms which have separable dependence on l_X, l_Y, and L as
+# where \bar{X} and \bar{Y} are filtered observations of the X and Y
+# fields. nominally, the cost of evaluating q(L) is O(lmax^{6}) (because
+# l_X, l_Y, and L are each 2D fields with lmax^2 elements), however if
+# the weight function can be written as a sum of separable terms in
+# l_X, l_Y, and L then this can be done much faster. for a flat-sky map
+# in Fourier space, for example, the weight function could be written as
 #
-# W^{s, XY} = \sum_{i=0}^{N} (e^{i*2\pi*s^{i,X}} * W^{i,X}(l_X)) *
-#                             (e^{i*2\pi*s^{i,Y}} * W^{i,Y}(l_Y)) *
-#                              (e^{-i*2\pi*s^{i,L}} * W^{i,L}(L))
+# W^{s, XY} = \sum_{i=0}^{N} \int{d^2 z}
+#                   (e^{+i*2\pi*s^{i,X}+i*(l_X.z)} W^{i,X}(l_X)) *
+#                    (e^{+i*2\pi*s^{i,Y}+i*(l_Y.z)} W^{i,Y}(l_Y)) *
+#                     (e^{-i*2\pi*s^{i,L}+i*( -L.z)} W^{i,L}( L ))
 #
-# where s^{i,X/Y/L} are integers representing a spin parameter for each
-# component of the weight function. with such a weight function q(L)
+# where s^{i,X/Y/L} are integers representing a spin parameter for the
+# components of the weight function. with such a weight function q(L)
 # may be evaluated in O(N_i * lmax^2 * log(lmax)) using fast Fourier
-# transforms (FFTs). in this module these weight functions and spins
-# are encapsulated by the 'qest' class.
+# transforms (FFTs). a similar result holds for full-sky maps, using
+# fast Spherical Harmonic Transforms (SHTs) to obtain an algorithm
+# which is slightly slower, at O(N_i * lmax^3) algorithm. separable
+# weight functions and spins are encapsulated by the 'qest' class.
 #
-# in addition to q^{XY}(L), one often wants to evaluate
+# in addition to q^{XY}(L), we often want to evaluate
 #
 #   * the response of the estimator q^{XY}(L) to s(L). if the
 #     filtering which relates \bar{X} to X is diagonal in
 #     Fourier space with \bar{X}(L) = F(L)X(L) then this
-#     can also be calculated quickly with FFTs, and is
-#     performed by the 'qest.fill_resp' method.
+#     can also be calculated quickly with FFTs on the flat-sky,
+#     or Wigner D-matrices on the full-sky. these calculations
+#     are performed by the 'qest.fill_resp' method.
 #
 #   * the ensemble-averaged cross-power <q1^{XY}(L) q2^{*ZA}(L)>,
 #     given estimates of the spectral cross-powers
 #     <\bar{X}(l)\bar{Z}^*(l)>, <\bar{X}(l),\bar{A}^*(l)>, etc.
-#     again, this cross-spectrum can be calculated quickly using FFTs.
-#     it is performed by the 'qest.fill_clqq' method.
+#     again, this cross-spectrum can be calculated quickly using
+#     FFTs or D-matrices. this calculation is performed by the
+#     'qest.fill_clqq' method.
 #
 
 import numpy as np
@@ -54,11 +60,17 @@ import numpy as np
 from .. import maps
 from .. import math
 
-def qe_cov_fill_helper( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False, npad=2):
+def qe_cov_fill_helper( qeXY, qeZA, ret, fX, fY, *args, **kwargs ):
+    if maps.is_cfft(ret):
+        return qe_cov_fill_helper_flatsky( qeXY, qeZA, ret, fX, fY, *args, **kwargs )
+    else:
+        return qe_cov_fill_helper_fullsky( qeXY, qeZZ, ret, fX, fY, *args, **kwargs )
+
+def qe_cov_fill_helper_flatsky( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False, npad=2):
     """ helper function to calculate various ensemble-average cross-products between two estimators qe1 and qe2. with all
     boolean options set to false this function calculates
 
-        ret(L) = 0.25 * \int{d^2 l_X} \int{d^2 l_Y} fX(l_X) fY(l_Y) \sum_{ij} W_{XY}^{i}(l_X, l_Y, L) W_{ZA}^{j}(l_X, l_Y, L) .
+        ret(L) = 0.25 * \int{d^2 l_X} \int{d^2 l_Y} fX(l_X) fY(l_Y) \sum_{ij} W_{XY}^{i}(l_X, l_Y, L) W_{ZA}^{j}(l_X, l_Y, L).
 
     where W_{XY} and W_{ZA} are weight function coming from the two estimators. options:
     
@@ -101,6 +113,56 @@ def qe_cov_fill_helper( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False,
 
     return ret
 
+def qe_cov_fill_helper_fullsky( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False):
+    """ a full-sky version of qe_cov_fill_helper_flatsky.
+    
+         * qeXY      = first estimator.
+         * qeZA      = second estimator.
+         * ret       = complex array in which to store results (the length of this array, lmax+1, defines the maximum multipole).
+         * fX, fY    = 1D real arrays representing the filter functions for the X and Y fields.
+         * switch_ZA = change W_{ZA}^{j}(l_X, l_Y, L) -> W_{ZA}^{j, ZA}(l_Y, l_X, L) .
+         * conj_ZA   = take the complex conjugate of the W_{ZA} weight function. W_{ZA}^{j} -> W^{ZA}^{* j}.
+    """
+
+    lmax = len(ret)-1
+    
+    i1_ZA, i2_ZA = { False : (0,1), True : (1,0) }[switch_ZA]
+    cfunc_ZA = { False : lambda v, l : v, True : lambda v, l : np.conj(v) }[conj_ZA]
+
+    lmax_fX = len(fX)-1
+    lmax_fY = len(fY)-1
+
+    for i in xrange(0, qeXY.ntrm):
+        for j in xrange(0, qeZA.ntrm):
+            # l1 part
+            tl1min = max(abs(qeXY.sl[i][0]), abs(qeZA.sl[j][i1_ZA]))
+            tl1max = min( [qeXY.lmax, qeZA.lmax, lmax_fX] )
+
+            cl1 = np.zeros( tl1max+1, dtype=np.complex )
+            for tl1 in xrange(tl1min, tl1max+1):
+                cl1[tl1] = qeXY.wl[i][0](tl1) * cfunc_ZA(qeZA.wl[j][i1_ZA](tl1), tl1) * (2.*tl1+1.) * fX[tl1]
+
+            # l2 part
+            tl2min = max(abs(qeXY.sl[i][1]), abs(qeZA.sl[j][i2_ZA]))
+            tl2max = min( [qeXY.lmax, qeZA.lmax, lmax_fY] )
+
+            cl2 = np.zeros( tl2max+1, dtype=np.complex )
+            for tl2 in xrange(tl2min, tl2max+1):
+                cl2[tl2] = qeXY.wl[i][1](tl2) * cfunc_ZA(qeZA.wl[j][i2_ZA](tl2), tl2) * (2.*tl2+1.) * fY[tl2]
+
+            # transform l1 and l2 parts to position space
+            glq = math.wignerd.gauss_legendre_quadrature( (tl1max + tl2max + lmax)/2 + 1 )
+            gp1 = glq.cf_from_cl( qeXY.sl[i][0], -qeZA.sl[j][i1_ZA], cl1 )
+            gp2 = glq.cf_from_cl( qeXY.sl[i][1], -qeZA.sl[j][i2_ZA], cl2 )
+
+            # multiply and return to cl space
+            clL = glq.cl_from_cf( lmax, qeXY.sl[i][2], -qeZA.sl[j][2], gp1 * gp2 )
+
+            for L in xrange(0, lmax+1):
+                ret[L] += clL[L] * qeXY.wl[i][2](L) * cfunc_ZA( qeZA.wl[j][2](L), L ) / (32.*np.pi)
+
+    return ret
+
 class qest():
     """ base class for a quadratic estiamtor q^{XY}(L),
     which can be run on fields \bar{X} and \bar{Y} as
@@ -110,20 +172,36 @@ class qest():
 
     with l_X + l_Y = L.
 
-    the weight function W^{s, XY} must be separable, and is
-    encoded as
+    the weight function W^{s, XY} must be separable. for
+    flat-sky calculation it is encoded as
 
-    W^{s,XY} = \sum_{i=0}^{N_i} (e^{i*2\pi*s^{i,X}} * W^{i,X}(l_X)) *
-                                 (e^{i*2\pi*s^{i,Y}} * W^{i,Y}(l_Y)) *
-                                  (e^{-i*2\pi*s^{i,L}} * W^{i,L}(L)).
+    W^{s, XY} = \sum_{i=0}^{N} \int{d^2 z}
+                    (e^{+i*2\pi*s^{i,X}+i*(l_X.z)} W^{i,X}(l_X)) *
+                     (e^{+i*2\pi*s^{i,Y}+i*(l_Y.z)} W^{i,Y}(l_Y)) *
+                      (e^{-i*2\pi*s^{i,L}+i*( -L.z)} W^{i,L}( L ))
+
+    for full-sky calculations it is encoded as
+
+    W^{s,XY} = \sum_{i=0}^{N_i} \int{d^2 n}
+                    {}_s^{i,X}Y_{l_X m_X}(n) W^{i,X}(l_X) *
+                     {}_s^{i,Y}Y_{l_Y m_Y}(n) W^{i,Y}(l_Y) *
+                      {}_s^{i,L}Y_{  L M  }(n) W_^{i,L}( L ).
 
     the spins s^{i,n} are stored in an array self.s[i][n] and the
-    weights w^{i,n}(l) are encapsulated as functions w[i][n](l,l_x,l_y). 
+    weights w^{i,n}(l) are encapsulated as functions w[i][n](l). some
+    flat-sky-specific weight functions may also take lx, ly as arguments.
     """
     def __init__(self):
         pass
 
-    def eval( self, barX, barY, npad=2 ):
+    def eval( self, barX, barY, **kwargs ):
+        if maps.is_cfft(barX):
+            assert( maps.is_cfft(barY) )
+            return self.eval_flatsky( barX, barY, **kwargs )
+        else:
+            return self.eval_fullsky( barX, barY, **kwargs )
+    
+    def eval_flatsky( self, barX, barY, npad=2 ):
         """ evaluate this quadratic estimator, returning
 
         q^{XY}(L) = 1/2 \int{d^2 l_X} \int{d^2 l_Y}
@@ -162,7 +240,13 @@ class qest():
 
         return cfft
 
-    def fill_resp( self, qeZA, ret, fX, fY, npad=2 ):
+    def fill_resp( self, qeZA, ret, fX, fY, **kwargs ):
+        if maps.is_cfft(ret):
+            return self.fill_resp_flatsky( qeZA, ret, fX, fY, **kwargs )
+        else:
+            return self.fill_resp_fullsky( qeZA, ret, fX, fY, **kwargs )
+
+    def fill_resp_flatsky( self, qeZA, ret, fX, fY, npad=2 ):
         """ compute the response of this estimator to the statistical
         anisotropy encapsulated by a second estimator qeZA,
         
@@ -176,11 +260,35 @@ class qest():
         normalized estimator for the statistical anisotropy defined by qeZA.
         """
         ret.fft[:,:] = 0.0
-        qe_cov_fill_helper( self, qeZA, ret, fX, fY, npad=npad)
+        qe_cov_fill_helper_flatsky( self, qeZA, ret, fX, fY, npad=npad)
         ret.fft[:,:] *= 2.0 # multiply by 2 because qe_cov_fill_helper returns 1/2 the response.
         return ret
 
-    def fill_clqq( self, ret, fXX, fXY, fYY, npad=2):
+    def fill_resp_fullsky( self, qeZA, ret, fX, fY, npad=2 ):
+        """ compute the response of this estimator to the statistical
+        anisotropy encapsulated by a second estimator qeZA,
+        
+            R(L) = 1/2 \int{d^2 l_X} \int{d_2 l_Y}
+                         W^{XY} W^{ZA} fX(l_X) fY(l_Y).
+
+        with l_X+l_Y=L and fX(l_X) fY(l_y) represent filters which are
+        diagonal in Fourier space applied to the X and Y fields.
+
+        dividing the output of self.eval() by this response gives a properly
+        normalized estimator for the statistical anisotropy defined by qeZA.
+        """
+        ret[:] = 0.0
+        qe_cov_fill_helper_fullsky( self, qeZA, ret, fX, fY)
+        ret[:] *= 2.0 # multiply by 2 because qe_cov_fill_helper returns 1/2 the response.
+        return ret
+
+    def fill_clqq( self, ret, fXX, fXY, fYY, **kwargs ):
+        if maps.is_cfft(ret):
+            return self.fill_clqq_flatsky( ret, fX, fY, **kwargs )
+        else:
+            return self.fill_clqq_fullsky( ret, fX, fY, **kwargs )
+    
+    def fill_clqq_flatsky( self, ret, fXX, fXY, fYY, npad=2):
         """ compute the ensemble-averaged auto-power < |q^{XY}(L)[\bar{X}, \bar{Y}]|^2 >,
         given estimates of the auto- and cross-spectra of \bar{X} and \bar{Y}.
 
@@ -192,8 +300,23 @@ class qest():
              * (optional) npad = padding factor to avoid aliasing in the convolution.
         """
         ret.fft[:,:] = 0.0
-        qe_cov_fill_helper( self, self, ret, fXX, fYY, switch_ZA=False, conj_ZA=True, npad=npad )
-        qe_cov_fill_helper( self, self, ret, fXY, fXY, switch_ZA=True,  conj_ZA=True, npad=npad )
+        qe_cov_fill_helper_flatsky( self, self, ret, fXX, fYY, switch_ZA=False, conj_ZA=True, npad=npad )
+        qe_cov_fill_helper_flatsky( self, self, ret, fXY, fXY, switch_ZA=True,  conj_ZA=True, npad=npad )
+        return ret
+
+    def fill_clqq_fullsky( self, ret, fXX, fXY, fYY):
+        """ compute the ensemble-averaged auto-power < |q^{XY}(L)[\bar{X}, \bar{Y}]|^2 >,
+        given estimates of the auto- and cross-spectra of \bar{X} and \bar{Y}.
+
+             * ret             = complex numpy array whose length (lmax+1) defines the maximum multipole
+                                 at which to evaluate the auto-power.
+             * fXX             = estimate of <\bar{X} \bar{X}^*>
+             * fXY             = estimate of <\bar{X} \bar{Y}^*>
+             * fYY             = estimate of <\bar{Y} \bar{Y}^*>
+        """
+        ret[:] = 0.0
+        qe_cov_fill_helper_fullsky( self, self, ret, fXX, fYY, switch_ZA=False, conj_ZA=True )
+        qe_cov_fill_helper_fullsky( self, self, ret, fXY, fXY, switch_ZA=True,  conj_ZA=True )
         return ret
 
     def get_slX(self, i):
@@ -205,11 +328,11 @@ class qest():
     def get_slL(self, i):
         return self.sl[i][2]
 
-    def get_wlX(self, i, l, lx, ly):
-        return self.wl[i][0](l, lx, ly)
+    def get_wlX(self, i, l, **kwargs):
+        return self.wl[i][0](l, **kwargs)
 
-    def get_wlY(self, i, l, lx, ly):
-        return self.wl[i][1](l, lx, ly)
+    def get_wlY(self, i, l, **kwargs):
+        return self.wl[i][1](l, **kwargs)
 
-    def get_wlL(self, i, l, lx, ly):
-        return self.wl[i][2](l, lx, ly)
+    def get_wlL(self, i, l, **kwargs):
+        return self.wl[i][2](l, **kwargs)
