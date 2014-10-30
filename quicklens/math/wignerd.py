@@ -1,3 +1,8 @@
+# quicklens/math/wignerd.py
+# --
+# routines for wigner d-matrix sums and
+# integrals using Gauss-Legendre quadrature.
+
 import numpy as np
 import cwignerd
 
@@ -18,7 +23,7 @@ class gauss_legendre_quadrature:
         self.zvec, self.wvec = cwignerd.init_gauss_legendre_quadrature(npoints)
 
     def cf_from_cl(self, s1, s2, cl):
-        "this computes cf[j] = \sum_{l} cl[l] d^l_{s1 s2}(self.zvec[j])"
+        """ this computes cf[j] = \sum_{l} cl[l] d^l_{s1 s2}(self.zvec[j]). """
 
         lmax = len(cl)-1
 
@@ -30,11 +35,10 @@ class gauss_legendre_quadrature:
             return (cwignerd.wignerd_cf_from_cl( s1, s2, 1, self.npoints, lmax, self.zvec, cl ))
 
     def cl_from_cf(self, lmax, s1, s2, cf):
-        "this computes cl[l] = \int_{x} cf(x) d^l_{s1 s2}(x)
+        """ this computes cl[l] = \int_{x} cf(x) d^l_{s1 s2}(x)
                                \sum_{j} cf[j] d^l_{s1 s2}[self.zvec[j]] * self.wvec[j]
                                for an array cf[j] which represents a polynomial cf(x)
-                               with degree < self.npoints - lmax sampled at x=self.zvec[j].
-        """
+                               with degree < self.npoints - lmax sampled at x=self.zvec[j]. """
 
         if np.iscomplexobj(cf):
             #FIXME: convert to 1 cl_from_cf call for potential 2x speed boost.
