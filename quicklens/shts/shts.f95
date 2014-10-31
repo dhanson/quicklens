@@ -210,26 +210,19 @@ subroutine map2vtm(ntht, nphi, lmax, phi, map, vtm)
   double precision phi(nphi)
   double complex, intent(in)  :: map(ntht, nphi)
   double complex, intent(out) :: vtm(ntht, -lmax:lmax)
-  double precision dphi(nphi)
 
   integer p, m
 
-  do p=2,nphi-1
-     dphi(p) = (phi(p+1) - phi(p-1))*0.5
-  end do
-  dphi(1) = phi(2) - phi(1)
-  dphi(nphi) = phi(nphi) - phi(nphi-1)
-
   do p=1,nphi
-     vtm(:,0) = vtm(:,0) + map(:,p)*dphi(p)
+     vtm(:,0) = vtm(:,0) + map(:,p)
   end do
 
 !$omp parallel do default(shared)
   do p=1,nphi
      do m=1,lmax
-        vtm(:,+m) = vtm(:,+m) + map(:,p) * dphi(p) * &
+        vtm(:,+m) = vtm(:,+m) + map(:,p) * &
              (cos(phi(p)*m)-(0.0,1.0)*sin(phi(p)*m))
-        vtm(:,-m) = vtm(:,-m) + map(:,p) * dphi(p) * &
+        vtm(:,-m) = vtm(:,-m) + map(:,p) * &
              (cos(phi(p)*m)+(0.0,1.0)*sin(phi(p)*m))
      end do
   end do
@@ -244,19 +237,12 @@ subroutine vtm2vlm(ntht, lmax, s, tht, vtm, vlm)
 
   integer l, m, tl, ts, tm, j
   double precision htttht(ntht), costht(ntht), sintht(ntht)
-  double precision dtht(ntht), scal(ntht), spow(ntht), spow_i(ntht)
+  double precision scal(ntht), spow(ntht), spow_i(ntht)
 
   double precision tfac, sfac, llm_arr_p(ntht), llm_arr_m(ntht)
   double precision llm_arr_p_lm0(ntht), llm_arr_p_lm1(ntht)
   double precision llm_arr_m_lm0(ntht), llm_arr_m_lm1(ntht)
   double precision llm_arr_x_lmt(ntht), rl(0:lmax), zl(0:lmax)
-
-  ! rough estimate of dtht from 2-point numerical difference.
-  do j=2,ntht-1
-     dtht(j) = (tht(j+1) - tht(j-1))*0.5
-  end do
-  dtht(1) = tht(2)-tht(1)
-  dtht(ntht) = tht(ntht)-tht(ntht-1)
 
   sfac = 2.**40
 
@@ -287,7 +273,7 @@ subroutine vtm2vlm(ntht, lmax, s, tht, vtm, vlm)
   llm_arr_p_lm0(:) = llm_arr_p(:)
   llm_arr_p_lm1(:) = 0.0
 
-  vlm(l*l+l) = sum( llm_arr_p_lm0(:)*vtm(:,0)*dtht(:) )
+  vlm(l*l+l) = sum( llm_arr_p_lm0(:)*vtm(:,0) )
 
   rl(:) = 0.0
   do tl=l+1,lmax
@@ -300,7 +286,7 @@ subroutine vtm2vlm(ntht, lmax, s, tht, vtm, vlm)
      llm_arr_p_lm1(:) = llm_arr_p_lm0(:)
      llm_arr_p_lm0(:) = llm_arr_x_lmt(:)
 
-     vlm(tl*tl+tl) = sum( llm_arr_p_lm0(:)*vtm(:,0)*dtht(:) )
+     vlm(tl*tl+tl) = sum( llm_arr_p_lm0(:)*vtm(:,0) )
   end do
 
   spow_i(:) = 0.0
@@ -309,7 +295,7 @@ subroutine vtm2vlm(ntht, lmax, s, tht, vtm, vlm)
 !$omp private(j, tl, tm, scal, spow, tfac, llm_arr_p_lm0) &
 !$omp private(llm_arr_p_lm1, llm_arr_m_lm0, llm_arr_m_lm1, llm_arr_x_lmt, rl) &
 !$omp firstprivate(l, m, lmax, spow_i, llm_arr_p, llm_arr_m) schedule(dynamic, 1) &
-!$omp shared(htttht, costht, sintht, sfac, s, zl, ntht, tht, vlm, vtm, dtht)
+!$omp shared(htttht, costht, sintht, sfac, s, zl, ntht, tht, vlm, vtm)
   do tm=1,lmax
      do m=m+1,tm
         if (m<=s) then
@@ -343,8 +329,8 @@ subroutine vtm2vlm(ntht, lmax, s, tht, vtm, vlm)
      llm_arr_m_lm0(:) = llm_arr_m(:)
      llm_arr_m_lm1(:) = 0.0
 
-     vlm(l*l+l+m) = sum( llm_arr_p_lm0(:)*scal(:)*vtm(:,+m)*dtht(:) )
-     vlm(l*l+l-m) = sum( llm_arr_m_lm0(:)*scal(:)*vtm(:,-m)*dtht(:) )
+     vlm(l*l+l+m) = sum( llm_arr_p_lm0(:)*scal(:)*vtm(:,+m) )
+     vlm(l*l+l-m) = sum( llm_arr_m_lm0(:)*scal(:)*vtm(:,-m) )
 
      rl(:) = 0.0
      do tl=l+1,lmax
@@ -360,8 +346,8 @@ subroutine vtm2vlm(ntht, lmax, s, tht, vtm, vlm)
         llm_arr_m_lm1(:) = llm_arr_m_lm0(:)
         llm_arr_m_lm0(:) = llm_arr_x_lmt(:)
 
-        vlm(tl*tl+tl+m) = sum( llm_arr_p_lm0(:)*scal(:)*vtm(:,+m)*dtht(:) )
-        vlm(tl*tl+tl-m) = sum( llm_arr_m_lm0(:)*scal(:)*vtm(:,-m)*dtht(:) )
+        vlm(tl*tl+tl+m) = sum( llm_arr_p_lm0(:)*scal(:)*vtm(:,+m) )
+        vlm(tl*tl+tl-m) = sum( llm_arr_m_lm0(:)*scal(:)*vtm(:,-m) )
 
         if (mod(tl,10) == 0) then
            do j=1,ntht
