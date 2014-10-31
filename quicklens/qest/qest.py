@@ -57,6 +57,7 @@
 
 import numpy as np
 
+from .. import shts
 from .. import maps
 from .. import math
 
@@ -168,21 +169,21 @@ class qest():
     which can be run on fields \bar{X} and \bar{Y} as
 
     q^{XY}(L) = 1/2 \int{d^2 l_X} \int{d^2 l_Y}
-                    W^{s, XY}(l_1, l_2, L) \bar{X}(l_X) \bar{Y}(l_Y)
+                    W^{XY}(l_X, l_Y, L) \bar{X}(l_X) \bar{Y}(l_Y)
 
     with l_X + l_Y = L.
 
     the weight function W^{s, XY} must be separable. for
     flat-sky calculation it is encoded as
 
-    W^{s, XY} = \sum_{i=0}^{N} \int{d^2 z}
+    W^{XY} = \sum_{i=0}^{N} \int{d^2 z}
                     (e^{+i*2\pi*s^{i,X}+i*(l_X.z)} W^{i,X}(l_X)) *
                      (e^{+i*2\pi*s^{i,Y}+i*(l_Y.z)} W^{i,Y}(l_Y)) *
                       (e^{-i*2\pi*s^{i,L}+i*( -L.z)} W^{i,L}( L ))
 
     for full-sky calculations it is encoded as
 
-    W^{s,XY} = \sum_{i=0}^{N_i} \int{d^2 n}
+    W^{XY} = \sum_{i=0}^{N_i} \int{d^2 n}
                     {}_s^{i,X}Y_{l_X m_X}(n) W^{i,X}(l_X) *
                      {}_s^{i,Y}Y_{l_Y m_Y}(n) W^{i,Y}(l_Y) *
                       {}_s^{i,L}Y_{  L M  }(n) W_^{i,L}( L ).
@@ -194,18 +195,88 @@ class qest():
     def __init__(self):
         pass
 
-    def eval( self, barX, barY, **kwargs ):
-        if maps.is_cfft(barX):
+    def eval( self, barX, barY=None, **kwargs ):
+        if barY == None:
+            barY = barX
+
+        if False:
+            pass
+        elif maps.is_cfft(barX):
             assert( maps.is_cfft(barY) )
+            return self.eval_flatsky( barX, barY, **kwargs )
+        elif maps.is_rfft(barX):
+            assert( maps.is_rfft(barX) )
             return self.eval_flatsky( barX, barY, **kwargs )
         else:
             return self.eval_fullsky( barX, barY, **kwargs )
+
+    def eval_fullsky( self, barX, barY ):
+        """ evaluate this quadratic estimator on the full-sky, returning
+
+        q^{XY}(L) = 1/2 \sum_{l_X} \sum_{l_Y}
+                     W^{XY}(l_X, l_Y, L) \bar{X}(l_X) \bar{Y}(l_Y)
+
+        where L, l_X and l_Y represent (l,m) spherical harmonic modes.
+
+        inputs:
+             * barX            = input field \bar{X}. should be 2D complex array
+                                 containing the harmonic modes for the X field
+                                 (in the 'vlm' indexing scheme, see shts.util).
+             * barY            = input field \bar{Y}. should be 2D complex array
+                                 containing the harmonic modes for the X field
+                                 (in the 'vlm' indexing scheme, see shts.util).
+        """
+        lmax   = self.lmax
+        lmax_X = shts.util.nlm2lmax( len(barX) )
+        lmax_Y = shts.util.nlm2lmax( len(barY) )
+
+        nphi   = lmax_X+lmax_Y+lmax+1
+        glq    = math.wignerd.gauss_legendre_quadrature( (lmax_X + lmax_Y + lmax)/2 + 1 )
+        tht    = np.arccos(glq.zvec)
+        phi    = np.linspace(0., 2.*np.pi, nphi, endpoint=False)
+
+        ret = np.zeros( (lmax+1)**2, dtype=np.complex )
+        for i in xrange(0, self.ntrm):
+            # l_X term
+            vlx = shts.util.alm2vlm( barX )
+            for l in xrange(0, lmax_X+1):
+                vlx[l**2:(l+1)**2] *= self.get_wlX(i,l)
+            vmx = shts.vlm2map( self.get_slX(i), tht, phi, vlx )
+            del vlx
+
+            # l_Y term
+            vly = shts.util.alm2vlm( barY )
+            for l in xrange(0, lmax_X+1):
+                vly[l**2:(l+1)**2] *= self.get_wlY(i,l)
+            vmy = shts.vlm2map( self.get_slY(i), tht, phi, vly )
+            del vly
+
+            # multiply in position space
+            vmm  = vmx * vmy
+            del vmx, vmy
+
+            # apply weights for harmonic integration
+            for j, w in enumerate(glq.wvec):
+                vmm[j,:] *= w * (2.*np.pi / nphi)
+
+            # perform integration
+            vlm = shts.map2vlm(lmax, self.get_slL(i), tht, phi, vmm)
+            del vmm
+
+            for l in xrange(0, lmax+1):
+                vlm[l**2:(l+1)**2] *= 0.5*self.get_wlL(i,l)
+
+            ret += vlm
+
+        return ret
     
     def eval_flatsky( self, barX, barY, npad=2 ):
-        """ evaluate this quadratic estimator, returning
+        """ evaluate this quadratic estimator on the flat-sky, returning
 
         q^{XY}(L) = 1/2 \int{d^2 l_X} \int{d^2 l_Y}
-                        W^{XY}(l_1, l_2, L) \bar{X}(l_X) \bar{Y}(l_Y)
+                        W^{XY}(l_X, l_Y, L) \bar{X}(l_X) \bar{Y}(l_Y)
+
+        where L, l_X and l_Y represent modes in 2D Fourier space.
 
         inputs:
              * barX            = input field \bar{X}. should be 2D complex
