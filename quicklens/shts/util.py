@@ -56,16 +56,24 @@ def lmax2nlm(lmax):
     
     return (lmax+1)*(lmax+2)/2
 
-def alm2vlm( glm, clm ):
+def alm2vlm( glm, clm=None ):
     """ convert alm format -> vlm format coefficients. glm is gradient mode, clm is curl mode. """
-    assert(len(glm) == len(clm))
     lmax = nlm2lmax(len(glm))
     ret = np.zeros( (lmax+1)**2, dtype=np.complex )
     for l in xrange(0, lmax+1):
         ms = np.arange(1,l+1)
-        ret[l*l+l]    = -(glm[l] + 1.j * clm[l])
-        ret[l*l+l+ms] = -(glm[ms * (2*lmax+1-ms)/2 + l] + 1.j * clm[ms * (2*lmax+1-ms)/2 + l])
-        ret[l*l+l-ms] = -((-1)**ms * ( np.conj( glm[ms * (2*lmax+1-ms)/2 + l] ) + 1.j * np.conj( clm[ms * (2*lmax+1-ms)/2 + l] ) ))
+        ret[l*l+l]    = -glm[l]
+        ret[l*l+l+ms] = -glm[ms * (2*lmax+1-ms)/2 + l]
+        ret[l*l+l-ms] = -(-1)**ms * np.conj( glm[ms * (2*lmax+1-ms)/2 + l] )
+
+    if clm != None:
+        assert( len(clm) == len(glm) )
+        for l in xrange(0, lmax+1):
+            ms = np.arange(1,l+1)
+            ret[l*l+l]    += -1.j * clm[l]
+            ret[l*l+l+ms] += -1.j * clm[ms * (2*lmax+1-ms)/2 + l]
+            ret[l*l+l-ms] += -(-1)**ms * 1.j * np.conj( clm[ms * (2*lmax+1-ms)/2 + l] )
+        
     return ret
 
 def vlm2alm( vlm ):
