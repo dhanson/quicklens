@@ -3,6 +3,8 @@
 ! this file contains Fortran code implementing the spherical harmonic
 ! recursion relations described in quicklens/notes/shts, and routines
 ! to convert between vlm harmonic coefficients and complex maps.
+!
+! NOTE: THESE ROUTINES ARE ONLY WRITTEN FOR SPIN s>=0
 
 subroutine vlm2map(ntht, nphi, lmax, s, tht, phi, vlm, map)
   integer ntht, nphi, lmax, s

@@ -24,7 +24,16 @@ def vlm2map(s, tht, phi, vlm):
     lmax = int( np.sqrt(len(vlm)) - 1 )
     assert(len(vlm) == (lmax+1)**2)
 
-    return fsht.vlm2map(lmax, s, tht, phi, vlm)
+    if s < 0:
+        vlmn = vlm.copy()
+        for l in xrange(0,lmax+1):
+            vlmn[l**2:(l+1)**2] = vlmn[l**2:(l+1)**2][::-1] * (-1)**(np.arange(-l, l+1.) )
+        ret = -fsht.vlm2map(lmax, -s, tht, -np.array(phi), vlmn)
+
+    else:
+        ret = fsht.vlm2map(lmax, s, tht, phi, vlm)
+
+    return ret
 
 def map2vlm(lmax, s, tht, phi, mp):
     """ perform a spin-s spherical harmonic transform, from a complex map to harmonic coeficients vlm.
@@ -36,4 +45,13 @@ def map2vlm(lmax, s, tht, phi, mp):
     output: * complex vector of harmonic coefficients vlm=v[l*l+l+m] with l \in [0,lmax] and m \in [-l, l], given by \sum_{ij} dtheta_i dphi_j Y_{lm}^{*}(\theta_i, \phi_j) map(i,j)
     """
     assert( mp.shape == (len(tht), len(phi)) )
-    return fsht.map2vlm(lmax, s, tht, phi, mp)
+
+    if s < 0:
+        ret = -fsht.map2vlm(lmax, -s, tht, -np.array(phi), mp)
+
+        for l in xrange(0,lmax+1):
+            ret[l**2:(l+1)**2] = ret[l**2:(l+1)**2][::-1] * (-1)**(np.arange(-l, l+1.) )
+    else:
+        ret = fsht.map2vlm(lmax, s, tht, phi, mp)
+
+    return ret
