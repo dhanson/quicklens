@@ -86,8 +86,8 @@ def vlm2alm( vlm ):
     for l in xrange(0, lmax+1):
         ms = np.arange(1,l+1)
 
-        glm[l] = vlm[l*l+l].real
-        clm[l] = vlm[l*l+l].imag
+        glm[l] = -vlm[l*l+l].real
+        clm[l] = -vlm[l*l+l].imag
 
         glm[ms * (2*lmax+1-ms)/2 + l] = -0.5  * ( vlm[l*l+l+ms] + (-1)**ms * np.conj( vlm[l*l+l-ms] ) )
         clm[ms * (2*lmax+1-ms)/2 + l] =  0.5j * ( vlm[l*l+l+ms] - (-1)**ms * np.conj( vlm[l*l+l-ms] ) )
