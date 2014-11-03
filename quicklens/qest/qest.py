@@ -128,7 +128,7 @@ def qe_cov_fill_helper_fullsky( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_Z
     lmax = len(ret)-1
     
     i1_ZA, i2_ZA = { False : (0,1), True : (1,0) }[switch_ZA]
-    cfunc_ZA = { False : lambda v, l : v, True : lambda v, l : np.conj(v) }[conj_ZA]
+    cfunc_ZA = { False : lambda v : v, True : lambda v : np.conj(v) }[conj_ZA]
 
     lmax_fX = len(fX)-1
     lmax_fY = len(fY)-1
@@ -141,7 +141,7 @@ def qe_cov_fill_helper_fullsky( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_Z
 
             cl1 = np.zeros( tl1max+1, dtype=np.complex )
             for tl1 in xrange(tl1min, tl1max+1):
-                cl1[tl1] = qeXY.wl[i][0](tl1) * cfunc_ZA(qeZA.wl[j][i1_ZA](tl1), tl1) * (2.*tl1+1.) * fX[tl1]
+                cl1[tl1] = qeXY.wl[i][0](tl1) * cfunc_ZA( qeZA.wl[j][i1_ZA](tl1) ) * (2.*tl1+1.) * fX[tl1]
 
             # l2 part
             tl2min = max(abs(qeXY.sl[i][1]), abs(qeZA.sl[j][i2_ZA]))
@@ -149,22 +149,22 @@ def qe_cov_fill_helper_fullsky( qeXY, qeZA, ret, fX, fY, switch_ZA=False, conj_Z
 
             cl2 = np.zeros( tl2max+1, dtype=np.complex )
             for tl2 in xrange(tl2min, tl2max+1):
-                cl2[tl2] = qeXY.wl[i][1](tl2) * cfunc_ZA(qeZA.wl[j][i2_ZA](tl2), tl2) * (2.*tl2+1.) * fY[tl2]
+                cl2[tl2] = qeXY.wl[i][1](tl2) * cfunc_ZA( qeZA.wl[j][i2_ZA](tl2) ) * (2.*tl2+1.) * fY[tl2]
 
             # transform l1 and l2 parts to position space
             glq = math.wignerd.gauss_legendre_quadrature( (tl1max + tl2max + lmax)/2 + 1 )
-            gp1 = glq.cf_from_cl( qeXY.sl[i][0], -qeZA.sl[j][i1_ZA], cl1 )
-            gp2 = glq.cf_from_cl( qeXY.sl[i][1], -qeZA.sl[j][i2_ZA], cl2 )
+            gp1 = glq.cf_from_cl( qeXY.sl[i][0], -(-1)**(conj_ZA)*qeZA.sl[j][i1_ZA], cl1 )
+            gp2 = glq.cf_from_cl( qeXY.sl[i][1], -(-1)**(conj_ZA)*qeZA.sl[j][i2_ZA], cl2 )
 
             # multiply and return to cl space
-            clL = glq.cl_from_cf( lmax, qeXY.sl[i][2], -qeZA.sl[j][2], gp1 * gp2 )
+            clL = glq.cl_from_cf( lmax, qeXY.sl[i][2], -(-1)**(conj_ZA)*qeZA.sl[j][2], gp1 * gp2 )
 
             for L in xrange(0, lmax+1):
-                ret[L] += clL[L] * qeXY.wl[i][2](L) * cfunc_ZA( qeZA.wl[j][2](L), L ) / (32.*np.pi)
+                ret[L] += clL[L] * qeXY.wl[i][2](L) * cfunc_ZA( qeZA.wl[j][2](L) ) / (32.*np.pi)
 
     return ret
 
-class qest():
+class qest(object):
     """ base class for a quadratic estiamtor q^{XY}(L),
     which can be run on fields \bar{X} and \bar{Y} as
 
@@ -196,7 +196,7 @@ class qest():
         pass
 
     def eval( self, barX, barY=None, **kwargs ):
-        if barY == None:
+        if barY is None:
             barY = barX
 
         if False:
@@ -331,7 +331,7 @@ class qest():
         normalized estimator for the statistical anisotropy defined by qeZA.
         """
         ret.fft[:,:] = 0.0
-        qe_cov_fill_helper_flatsky( self, qeZA, ret, fX, fY, npad=npad)
+        qe_cov_fill_helper_flatsky( self, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False, npad=npad)
         ret.fft[:,:] *= 2.0 # multiply by 2 because qe_cov_fill_helper returns 1/2 the response.
         return ret
 
@@ -349,15 +349,15 @@ class qest():
         normalized estimator for the statistical anisotropy defined by qeZA.
         """
         ret[:] = 0.0
-        qe_cov_fill_helper_fullsky( self, qeZA, ret, fX, fY)
+        qe_cov_fill_helper_fullsky( self, qeZA, ret, fX, fY, switch_ZA=False, conj_ZA=False)
         ret[:] *= 2.0 # multiply by 2 because qe_cov_fill_helper returns 1/2 the response.
         return ret
 
     def fill_clqq( self, ret, fXX, fXY, fYY, **kwargs ):
         if maps.is_cfft(ret):
-            return self.fill_clqq_flatsky( ret, fX, fY, **kwargs )
+            return self.fill_clqq_flatsky( ret, fXX, fXY, fYY, **kwargs )
         else:
-            return self.fill_clqq_fullsky( ret, fX, fY, **kwargs )
+            return self.fill_clqq_fullsky( ret, fXX, fXY, fYY, **kwargs )
     
     def fill_clqq_flatsky( self, ret, fXX, fXY, fYY, npad=2):
         """ compute the ensemble-averaged auto-power < |q^{XY}(L)[\bar{X}, \bar{Y}]|^2 >,

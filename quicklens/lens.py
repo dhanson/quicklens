@@ -61,10 +61,10 @@ def calc_lensing_clbb_flat_sky_first_order(lbins, nx, dx, cl_unl, t=None):
     qeep.fill_resp( qeep, ret, np.ones(cl_unl.lmax+1), 2.*np.ones(cl_unl.lmax+1), npad=1 )
     return ret.get_ml(lbins, t=t)
 
-def calc_lensing_clbb_flat_sky_first_order_curl(lbins, nx, dx, cl_unl, w=None):
+def calc_lensing_clbb_flat_sky_first_order_curl(lbins, nx, dx, cl_unl, t=None):
     """ version of calc_lensing_clbb_flat_sky_first_order which treats cl_unl as a curl-mode lensing potential psi rather than as a gradient mode phi. """
     ret = maps.cfft(nx, dx)
-    qeep = qest.qest_blm_EX( np.sqrt(cl_unl.clee), np.sqrt(cl_unl.clpp) )
+    qeep = qest.qest_blen_EX( np.sqrt(cl_unl.clee), np.sqrt(cl_unl.clpp) )
     qeep.fill_resp( qeep, ret, np.ones(cl_unl.lmax+1), 2.*np.ones(cl_unl.lmax+1) )
     return ret.get_ml(lbins, t=t)
 
