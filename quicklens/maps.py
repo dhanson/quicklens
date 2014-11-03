@@ -1041,6 +1041,11 @@ class cfft(pix):
             return cfft( nx=self.nx, dx=self.dx, ny=self.ny, dy=self.dy, fft = (self.fft - other.fft) )
         else:
             assert(0)
+
+    def __pow__(self, p2):
+        ret = self.copy()
+        ret.fft = self.fft**p2
+        return ret
             
     def compatible(self, other):
         """ check whether this map can be added, subtracted, etc. to the map 'other'. """
