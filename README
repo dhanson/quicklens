@@ -1,8 +1,9 @@
 quicklens
 =====
 
-This package contains code for generating simulated CMB maps with lensing effects, 
-as well as estimating the lensing potential from an observed. It has routines for:
+This package contains code for generating simulated CMB maps with 
+lensing effects, as well as estimating the lensing potential from 
+an observed sky. It has routines for:
      * simulating lensed and unlensed CMB maps in both the 
        full (curved sky) case, as well as the flat-sky limit.
      * inverse-variance filtering a flat sky map, to downweight 
@@ -11,28 +12,31 @@ as well as estimating the lensing potential from an observed. It has routines fo
        estimators on a filtered sky map (as well as a framework for 
        easily implementing other quadratic anisotropy estimators).
 
-The focus for estimators is on quick, flat-sky routines, however code for evaluating
-full-sky estimators and their noise spectra is included as well.
+The focus for estimators is on quick, flat-sky routines, however 
+code for evaluating full-sky estimators and their noise spectra 
+is included as well.
 
-Scripts in the 'examples' directory give quick demonstrations of major use cases. 
-Primary examples include
+Scripts in the 'examples' directory give quick demonstrations of 
+major use cases. Primary examples include:
+
      * examples/plot_lens_reconstruction_noise_levels.py
-        Plot lens reconstruction noise power spectra for the TT, EE, TE,
-	TB and EB estimators, assuming a toy experiment with Gaussian beam 
-	and white instrumental noise. Plots both full-sky and flat-sky 
-	calculations for comparison.
+        Plot lens reconstruction noise power spectra for the 
+	TT, EE, TE, TB and EB estimators, assuming a toy 
+	experiment with Gaussian beam and white instrumental noise. 
+	Plots are made for both full-sky and flat-sky calculations 
+	for comparison.
        
      * examples/cinv/test_cinv_teb.py
-	Run an inverse-variance filtering operation on a flat-sky map
-	using preconditioned congjugate descent.
+	Run an inverse-variance filtering operation on a flat-sky 
+	map using preconditioned congjugate descent.
 
      * examples/lens/make_lensed_map_flat_sky.py
-        Generate a set of lensed CMB maps in the flat-sky approximation.
+        Generate a set of lensed CMB maps in the flat-sky limit.
 
      * examples/lens/make_lensing_estimators.py
-        Runs a set of quadratic CMB lensing estimators on lensed maps, 
-	and plots their power spectra as well as cross-correlation with 
-	the input lensing potential.
+        Runs a set of quadratic CMB lensing estimators on lensed 
+	maps, and plots their power spectra as well as cross-
+	correlation with the input lensing potential.
 
 This code has the following dependencies:
      * numpy (required)
@@ -41,18 +45,19 @@ This code has the following dependencies:
      * pypar (optional, used for coordinating parallel 
        	     generation of simulations and lensing analysis). 
 
-The code can be run either from this directory, or installed by running
+The code can be run either from this directory, or installed by 
+running "python setup.py install".
 
-python setup.py install
+The code is primarily written in Python, although some low level 
+spherical harmonic transform (SHT) routines are written in Fortran 
+for speed. In order to use these SHT routines, the code must be 
+comiled. This is done automatically when installing, however if 
+running the code without installing it needs to be built with
 
-The code is primarily written in Python, although some low level spherical harmonic 
-transform (SHT) routines are written in Fortran for speed. In order to use these SHT 
-routines, the code must be comiled. This is done automatically when installing, however 
-if running the code without installing it needs to be built with
+"python setup.py build_ext --inplace"
 
-python setup.py build_ext --inplace
+Depending on system, you may need to specify a fortran compiler. 
+For example
 
-Depending on system, you may need to specify a fortran compiler. For example
-
-python setup.py build_ext --inplace --fcompiler=gnu95
+"python setup.py build_ext --inplace --fcompiler=gnu95"
 
