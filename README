@@ -1,26 +1,54 @@
 quicklens
 =====
 
-This package contains code for generating simulated CMB maps with lensing effects, as well as estimating the lensing potential from an observed. It has routines for:
-     * simulating lensed and unlensed CMB maps in both the full (curved sky) case, as well as the flat-sky limit.
-     * inverse-variance filtering a flat sky map, to downweight noisy modes for power spectrum or n-point function analysis. 
-     * running the full suite of temperature+polarization quadratic estimators on a filtered sky map (as well as a framework for easily implementing other quadratic anisotropy estimators).
+This package contains code for generating simulated CMB maps with lensing effects, 
+as well as estimating the lensing potential from an observed. It has routines for:
+     * simulating lensed and unlensed CMB maps in both the 
+       full (curved sky) case, as well as the flat-sky limit.
+     * inverse-variance filtering a flat sky map, to downweight 
+       noisy modes for power spectrum or n-point function analysis. 
+     * running the full suite of temperature+polarization quadratic 
+       estimators on a filtered sky map (as well as a framework for 
+       easily implementing other quadratic anisotropy estimators).
 
-Scripts in the 'examples' directory give quick demonstrations of major use cases. Primary examples include
-     * examples/cinv/test_cinv_teb.py -- for running inverse-variance filtering with preconditioned conjugate descent.
-     * examples/lens/make_lensed_map_flat_sky.py -- generates a set of lensed CMB maps in the flat-sky approximation.
-     * examples/lens/make_lensing_estimators.py -- runs a set of quadratic CMB lensing estimators on lensed maps, and plots their power spectra as well as cross-correlation with the input lensing potential.
+The focus for estimators is on quick, flat-sky routines, however code for evaluating
+full-sky estimators and their noise spectra is included as well.
+
+Scripts in the 'examples' directory give quick demonstrations of major use cases. 
+Primary examples include
+     * examples/plot_lens_reconstruction_noise_levels.py
+        Plot lens reconstruction noise power spectra for the TT, EE, TE,
+	TB and EB estimators, assuming a toy experiment with Gaussian beam 
+	and white instrumental noise. Plots both full-sky and flat-sky 
+	calculations for comparison.
+       
+     * examples/cinv/test_cinv_teb.py
+	Run an inverse-variance filtering operation on a flat-sky map
+	using preconditioned congjugate descent.
+
+     * examples/lens/make_lensed_map_flat_sky.py
+        Generate a set of lensed CMB maps in the flat-sky approximation.
+
+     * examples/lens/make_lensing_estimators.py
+        Runs a set of quadratic CMB lensing estimators on lensed maps, 
+	and plots their power spectra as well as cross-correlation with 
+	the input lensing potential.
 
 This code has the following dependencies:
      * numpy (required)
-     * scipy (optional, used for smoothing in one of the plotting routines)
-     * pypar (optional, used for coordinating parallel generation of simulations and lensing analysis). 
+     * scipy (optional, used for smoothing in 
+       	     one of the plotting routines)
+     * pypar (optional, used for coordinating parallel 
+       	     generation of simulations and lensing analysis). 
 
 The code can be run either from this directory, or installed by running
 
 python setup.py install
 
-The code is primarily written in Python, although some low level spherical harmonic transform (SHT) routines are written in Fortran for speed. In order to use these SHT routines, the code must be comiled. This is done automatically when installing, however if running the code without installing it needs to be built with
+The code is primarily written in Python, although some low level spherical harmonic 
+transform (SHT) routines are written in Fortran for speed. In order to use these SHT 
+routines, the code must be comiled. This is done automatically when installing, however 
+if running the code without installing it needs to be built with
 
 python setup.py build_ext --inplace
 
