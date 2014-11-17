@@ -2,8 +2,13 @@
 # --
 # this module contains various helper functions.
 
-import sys, time, copy, os, io, sqlite3
+import sys, time, copy, os, io
 import numpy as np
+
+try:
+    import sqlite3
+except ImportError, exc:
+    sys.stderr.write("IMPORT ERROR: " + __file__ + " ({})".format(exc) + "\n")
 
 def chunks(l,n):
 	""" divide list l into smaller chunks of size <= n. """
