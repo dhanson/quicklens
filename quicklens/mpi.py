@@ -22,7 +22,7 @@ try:
     finalize = pypar.finalize
 
 except ImportError, exc2:
-    sys.stderr.write("IMPORT ERROR: " + __file__ + " ({})".format(exc) + ". Could not load pbs or pypar. MPI will not be used.\n")
+    sys.stderr.write("IMPORT ERROR: " + __file__ + " (" + str(exc) + "). Could not load pbs or pypar. MPI will not be used.\n")
 
     rank = 0
     size = 1

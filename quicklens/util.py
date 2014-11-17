@@ -5,11 +5,6 @@
 import sys, time, copy, os, io
 import numpy as np
 
-try:
-    import sqlite3
-except ImportError, exc:
-    sys.stderr.write("IMPORT ERROR: " + __file__ + " ({})".format(exc) + "\n")
-
 def chunks(l,n):
 	""" divide list l into smaller chunks of size <= n. """
 	return [l[i:i+n] for i in range(0, len(l), n)]
@@ -256,12 +251,18 @@ class memoize(object):
             return v
 
 # some helper functions for storing np arrays in an sqlite3 database.
-def adapt_array(arr):
-    out = io.BytesIO(); np.save(out, arr); out.seek(0); return buffer(out.read())
-sqlite3.register_adapter(np.ndarray, adapt_array)
-def convert_array(text):
-    out = io.BytesIO(text); out.seek(0); return np.load(out)
-sqlite3.register_converter("array", convert_array)
+try:
+    import sqlite3
+
+    def adapt_array(arr):
+        out = io.BytesIO(); np.save(out, arr); out.seek(0); return buffer(out.read())
+    sqlite3.register_adapter(np.ndarray, adapt_array)
+    def convert_array(text):
+        out = io.BytesIO(text); out.seek(0); return np.load(out)
+    sqlite3.register_converter("array", convert_array)
+    
+except ImportError, exc:
+    sys.stderr.write("IMPORT ERROR: " + __file__ + " (" + str(exc) + ")\n")
 
 class npdb():
     """ a simple wrapper class to store numpy arrays in an sqlite3 database, indexed by an id string. """
