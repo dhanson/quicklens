@@ -21,7 +21,7 @@ try:
     barrier = pypar.barrier
     finalize = pypar.finalize
 
-except ImportError, exc2:
+except ImportError, exc:
     sys.stderr.write("IMPORT ERROR: " + __file__ + " (" + str(exc) + "). Could not load pbs or pypar. MPI will not be used.\n")
 
     rank = 0
