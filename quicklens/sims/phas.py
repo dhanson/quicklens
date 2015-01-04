@@ -42,7 +42,8 @@ class library():
                 else:
                     keyseed = raw_input("quicklens::sims::phas: enter several random strokes on the keyboard followed by enter to initialize the random seed.\n")
                     assert(len(keyseed) > 0)
-                    np.random.seed(np.abs(int(hash(keyseed))))
+                    #Ensure that seed is less than or equal to 2**32
+                    np.random.seed(np.abs(int(hash(keyseed)))%(2**32))
 
                 # store the current state.
                 pk.dump( np.random.get_state(), open(lib_dir + "/state_%04d.pk"%0, 'w') )
