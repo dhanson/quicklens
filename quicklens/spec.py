@@ -59,7 +59,7 @@ def get_camb_scalcl(fname=None, prefix=None, lmax=None):
         assert( prefix == None )
         
     tf = glob.glob( fname )
-    assert(len(tf) == 1)
+    assert(len(tf) == 1),"No filename matching {0} found!".format(fname)
     
     return camb_clfile( tf[0], lmax=lmax )
 
@@ -97,7 +97,7 @@ class camb_clfile(object):
              * (optional) lmax  = maximum multipole to load (all multipoles in file will be loaded by default).
         """
         tarray = np.loadtxt(tfname)
-        lmin   = tarray[0, 0]
+        lmin   = int(tarray[0, 0])
         assert(lmin in [1,2])
 
         if lmax == None:
