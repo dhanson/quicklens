@@ -2,7 +2,7 @@
 # to compile fortran code for spherical harmonic transforms inplace, run
 # python setup.py build_ext --inplace --fcompiler=gnu95
 
-import glob
+import os,glob
 import numpy as np
 import distutils
 
@@ -26,5 +26,12 @@ def configuration(parent_package='',top_path=None):
 if __name__ == "__main__":
     from numpy.distutils.core import setup
 
-    setup(packages=["quicklens","quicklens.cinv","quicklens.qest","quicklens.sims","quicklens.shts","quicklens.math"],
+    packages = ["quicklens","quicklens.cinv","quicklens.qest","quicklens.sims","quicklens.shts","quicklens.math"]
+
+    package_data = dict()
+    data_dir = os.path.join("data","cl","planck_wp_highL")
+    package_data["quicklens"] = [ os.path.join(data_dir,name) for name in os.listdir(os.path.join("quicklens",data_dir)) ]
+
+    setup(packages=packages,
+          package_data=package_data,
           configuration=configuration)
