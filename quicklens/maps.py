@@ -792,7 +792,7 @@ class rfft(pix):
         """ class which contains the FFT of an rmap. """
         super( rfft, self ).__init__(nx, dx, ny=ny, dy=dy)
 
-        if fft == None:
+        if fft is None:
             fft = np.zeros( (self.ny, self.nx/2+1), dtype=np.complex )
         self.fft = fft
 
