@@ -942,7 +942,7 @@ class cfft(pix):
     def __init__(self, nx, dx, fft=None, ny=None, dy=None):
         super( cfft, self ).__init__(nx, dx, ny=ny, dy=dy)
 
-        if fft == None:
+        if fft is None:
             fft = np.zeros( (self.ny, self.nx), dtype=np.complex )
         self.fft = fft
 
