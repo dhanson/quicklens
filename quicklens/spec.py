@@ -583,8 +583,8 @@ def rcfft2cl( lbins, r1, r2=None, t=None, psimin=0., psimax=np.inf, psispin=1 ):
         tvec = t(ell)
 
     cvec = (r1.fft * np.conj(r2.fft)).flatten()
-    wvec[ np.isnan(c) ] = 0.0
-    cvec[ np.isnan(c) ] = 0.0
+    wvec[ np.isnan(cvec) ] = 0.0
+    cvec[ np.isnan(cvec) ] = 0.0
 
     if dopsi:
         w[ np.where( psi < psimin ) ] = 0.0
@@ -643,7 +643,7 @@ def tebfft2cl( lbins, teb1, teb2=None, t=None,  psimin=0., psimax=np.inf, psispi
                         'cleb' : cleb,
                         'clbb' : clbb } )
 
-def cross_cl( lbins, r1, r2=None, w=None ):
+def cross_cl( lbins, r1, r2=None, w=None , t=None):
     """ returns the auto- or cross-spectra of either rfft or tebfft objects. this is a convenience wrapper around tebfft2cl and rcfft2cl. """
     if r2 is None:
         r2 = r1
