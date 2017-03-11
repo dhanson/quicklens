@@ -28,9 +28,8 @@ if __name__ == "__main__":
 
     packages = ["quicklens","quicklens.cinv","quicklens.qest","quicklens.sims","quicklens.shts","quicklens.math"]
 
-    package_data = dict()
-    data_dir = os.path.join("data","cl","planck_wp_highL")
-    package_data["quicklens"] = [ os.path.join(data_dir,name) for name in os.listdir(os.path.join("quicklens",data_dir)) ]
+    data_dir = os.path.join("data","cl","planck_wp_highL","*")
+    package_data = { "quicklens" : [data_dir] }
 
     setup(packages=packages,
           package_data=package_data,

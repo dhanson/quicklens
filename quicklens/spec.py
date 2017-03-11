@@ -97,8 +97,9 @@ class camb_clfile(object):
              * (optional) lmax  = maximum multipole to load (all multipoles in file will be loaded by default).
         """
         tarray = np.loadtxt(tfname)
-        lmin   = int(tarray[0, 0])
-        assert(lmin in [1,2])
+        lmin   = tarray[0, 0]
+        assert(int(lmin)==lmin)
+        lmin = int(lmin)
 
         if lmax == None:
             lmax = np.shape(tarray)[0]-lmin+1
