@@ -59,7 +59,7 @@ def get_camb_scalcl(fname=None, prefix=None, lmax=None):
         assert( prefix == None )
         
     tf = glob.glob( fname )
-    assert(len(tf) == 1)
+    assert(len(tf) == 1),"No filename matching {0} found!".format(fname)
     
     return camb_clfile( tf[0], lmax=lmax )
 
@@ -98,7 +98,8 @@ class camb_clfile(object):
         """
         tarray = np.loadtxt(tfname)
         lmin   = tarray[0, 0]
-        assert(lmin in [1,2])
+        assert(int(lmin)==lmin)
+        lmin = int(lmin)
 
         if lmax == None:
             lmax = np.shape(tarray)[0]-lmin+1
@@ -583,8 +584,8 @@ def rcfft2cl( lbins, r1, r2=None, t=None, psimin=0., psimax=np.inf, psispin=1 ):
         tvec = t(ell)
 
     cvec = (r1.fft * np.conj(r2.fft)).flatten()
-    wvec[ np.isnan(c) ] = 0.0
-    cvec[ np.isnan(c) ] = 0.0
+    wvec[ np.isnan(cvec) ] = 0.0
+    cvec[ np.isnan(cvec) ] = 0.0
 
     if dopsi:
         w[ np.where( psi < psimin ) ] = 0.0
@@ -643,7 +644,7 @@ def tebfft2cl( lbins, teb1, teb2=None, t=None,  psimin=0., psimax=np.inf, psispi
                         'cleb' : cleb,
                         'clbb' : clbb } )
 
-def cross_cl( lbins, r1, r2=None, w=None ):
+def cross_cl( lbins, r1, r2=None, w=None , t=None):
     """ returns the auto- or cross-spectra of either rfft or tebfft objects. this is a convenience wrapper around tebfft2cl and rcfft2cl. """
     if r2 is None:
         r2 = r1

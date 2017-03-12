@@ -20,9 +20,9 @@ import util
 
 class pix(object):
     def __init__(self, nx, dx, ny=None, dy=None):
-        if ny == None:
+        if ny is None:
             ny = nx
-        if dy == None:
+        if dy is None:
             dy = dx
             
         self.nx = nx; self.ny = ny; self.dx = dx; self.dy = dy
@@ -52,7 +52,7 @@ class rmap(pix):
     def __init__(self, nx, dx, map=None, ny=None, dy=None):
         """ class which contains a real-valued map """
         super( rmap, self ).__init__(nx, dx, ny=ny, dy=dy)
-        if map == None:
+        if map is None:
             self.map = np.zeros( (self.ny, self.nx) )
         else:
             self.map = map
@@ -211,7 +211,7 @@ class tqumap(pix):
         """ class which contains temperature (T) and polarization (Q, U) maps. """
         
         super( tqumap, self ).__init__(nx, dx, ny=ny, dy=dy)
-        if maps == None:
+        if maps is None:
             self.tmap = np.zeros( (self.ny, self.nx) )
             self.qmap = np.zeros( (self.ny, self.nx) )
             self.umap = np.zeros( (self.ny, self.nx) )
@@ -244,7 +244,7 @@ class tqumap(pix):
         threshold(v) -> set all pixels which don't satisfy (-|v| < val < |v|) equal to vcut.
         threshold(min,max) -> set all pixels which don't satisfy (vmin < val < vmax) equal to vcut.
         """
-        if vmax == None:
+        if vmax is None:
             vmin = -np.abs(vmin)
             vmax = +np.abs(vmin)
         assert( vmin < vmax )
@@ -412,7 +412,7 @@ class tqumap_wt(pix):
     def __init__(self, nx, dx, weight=None, ny=None, dy=None):
         """ class which contains a 3x3 weight or covariance matrix for each pixel of a tqumap."""
         super( tqumap_wt, self ).__init__(nx, dx, ny=ny, dy=dy)
-        if weight == None:
+        if weight is None:
             self.weight = np.zeros( (self.ny, self.nx, 3, 3) )
         else:
             self.weight = weight
@@ -456,7 +456,7 @@ def make_tqumap_wt( pix, ninv=None, mask=None, ninv_dcut=None, nlev_tp=None, mas
         if ninv_dcut != None:
             dets = np.abs(util.det_3x3(ninv.weight))
     else:
-        assert(ninv_dcut == None)
+        assert(ninv_dcut is None)
 
     if nlev_tp != None:
         ret.weight = np.zeros( ret.weight.shape )
@@ -503,7 +503,7 @@ class tebfft(pix):
         """ class which contains the FFT of a tqumap. temperature (T), E- and B-mode polarization. """
         super( tebfft, self ).__init__(nx, dx, ny=ny, dy=dy)
 
-        if ffts == None:
+        if ffts is None:
             self.tfft = np.zeros( (self.ny, self.nx/2+1), dtype=np.complex )
             self.efft = np.zeros( (self.ny, self.nx/2+1), dtype=np.complex )
             self.bfft = np.zeros( (self.ny, self.nx/2+1), dtype=np.complex )
@@ -535,7 +535,7 @@ class tebfft(pix):
             psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
         lb = 0.5*(lbins[:-1] + lbins[1:])
             
-        if t == None:
+        if t is None:
             t = np.ones(l.shape)
         else:
             t = t(l)
@@ -792,7 +792,7 @@ class rfft(pix):
         """ class which contains the FFT of an rmap. """
         super( rfft, self ).__init__(nx, dx, ny=ny, dy=dy)
 
-        if fft == None:
+        if fft is None:
             fft = np.zeros( (self.ny, self.nx/2+1), dtype=np.complex )
         self.fft = fft
 
@@ -942,7 +942,7 @@ class cfft(pix):
     def __init__(self, nx, dx, fft=None, ny=None, dy=None):
         super( cfft, self ).__init__(nx, dx, ny=ny, dy=dy)
 
-        if fft == None:
+        if fft is None:
             fft = np.zeros( (self.ny, self.nx), dtype=np.complex )
         self.fft = fft
 
@@ -1082,7 +1082,7 @@ class cfft(pix):
             psi = np.mod( psispin*np.arctan2(lx, -ly), 2.*np.pi ).flatten()
         lb = 0.5*(lbins[:-1] + lbins[1:])
             
-        if t == None:
+        if t is None:
             t = np.ones(l.shape)
         else:
             t = t(l)
